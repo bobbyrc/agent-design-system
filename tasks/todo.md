@@ -17,11 +17,11 @@ Fresh independent review accepted closure of the low-severity provenance omissio
 
 - [x] Recheck clean master HEAD and repository instructions; isolate working branch.
 - [x] Materialize canonical Library source ZIP with identity; read blueprint and inspect both original illustrations.
-- [ ] Implement synthetic equipment-return web fixture (examples/equipment/: brief, fixture, UI only).
-- [ ] Implement shared fail-closed evidence runner and negative tests (scripts/, contracts/, package files, CI).
-- [ ] Add compact router, contextual pattern/profile, host capability boundary and usage documentation (skills/ui-design/, patterns/, profiles/, adapters/, docs/, README).
-- [ ] Run existing and new checks on settled tree; inspect narrow/wide screenshots and interactions.
-- [ ] Fresh independent defect review; resolve substantiated findings and rerun final checks.
+- [x] Implement synthetic equipment-return web fixture (examples/equipment/: brief, fixture, UI only).
+- [x] Implement shared fail-closed evidence runner and negative tests (scripts/, contracts/, package files, CI).
+- [x] Add compact router, contextual pattern/profile, host capability boundary and usage documentation (skills/ui-design/, patterns/, profiles/, adapters/, docs/, README).
+- [x] Run existing and new checks on settled tree; inspect narrow/wide screenshots and interactions.
+- [x] Fresh independent defect review; resolve substantiated findings and rerun final checks.
 - [ ] Commit, open draft PR and monitor exact-head CI.
 
 ## Frozen integration interface
@@ -32,4 +32,4 @@ Required checks: TASK-RETURN-01, RETURN-FAIL-01, DUPLICATE-01, NARROW-01, KEYBOA
 
 ## Review
 
-Pending final verification and independent review. Source pack remains local outside repository; no production data, competitor bundles, global skill changes, deployment, paid service, or repository licensing selection.
+Root verification passed 13 preserved measurement tests, 51 unit/negative tests, one actual-browser focus regression, and all seven frozen outcomes after a current-image independent review. Source review closed two verifier findings; image review closed one minor copy finding. Final feature commit `a7affb474a9024996dc45c66b5ee1cd9ae6903c9`, source hash `a50f94fdcf83b8df971c3531b857278cbbb49086af4d00b7d17cc71c655c772b`, capture run `4b80b4f4-11b1-4013-908a-c4bfad3f1340`. See [verification record](../docs/web-increment-verification.md) for scoped evidence and limitations. Draft PR and exact-head CI pending. Source pack and generated captures remain outside tracked public source; no global installation, deployment, paid service or license selection.

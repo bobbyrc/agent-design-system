@@ -5,7 +5,7 @@ A reusable Figma UI workflow plus a bounded original-design web teaching path, g
 ## Contents
 
 - [UI design entry](skills/ui-design/SKILL.md): compact original/reproduction/repair/exploration routing.
-- [Web workflow and runnable example](docs/web-workflow.md): local commands, state checks, evidence gate and limits.
+- [Web workflow and runnable example](docs/web-workflow.md): local commands, state checks, evidence gate and limits. [Increment verification](docs/web-increment-verification.md) records scoped execution results.
 - [Operational web profile](profiles/web-operational.md), [collection/return pattern](patterns/searchable-collection-return.md), [host adapters](adapters/README.md), and [web source provenance](docs/web-source-provenance.md).
 
 - [Shared Figma UI skill](skills/figma-ui/SKILL.md): portable workflow, templates, harness adapters, and a measurement comparison helper.
@@ -48,6 +48,7 @@ From the repository root with Node 22 or later:
 npm ci
 npx playwright install chromium
 npm test
+npm run test:browser
 npm run verify:machine
 ```
 

@@ -14,6 +14,7 @@ From the repository root, use Node 22 or later and install the pinned dependenci
 npm ci
 npx playwright install chromium
 npm test
+npm run test:browser
 npm run verify:machine
 ```
 
@@ -43,7 +44,7 @@ Run the preserved measurement helper separately:
 python3 -m unittest discover -s skills/figma-ui/scripts -p 'test_*.py'
 ```
 
-Those 13 tests check supplied measurement comparisons, not browser rendering or original design quality. New negative tests exercise the evidence gate. Neither suite proves a protected evaluation boundary.
+Those 13 tests check supplied measurement comparisons, not browser rendering or original design quality. New unit/negative tests exercise the evidence gate; `test:browser` exercises focus-indicator rejection in actual Chromium. Neither suite proves a protected evaluation boundary.
 
 ## Evidence and completion
 
