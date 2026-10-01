@@ -1,0 +1,124 @@
+{
+  "illustrative_only": true,
+  "document_kind": "teaching_design_decision",
+  "id": "equipment-direction-v1",
+  "brief_revision": "equipment-brief-v1",
+  "mode": "original",
+  "platform_profile": "web-operational/v1",
+  "primary_job": "A staff operator finds an overdue kit, checks return details, records a return and sees accurate inventory status.",
+  "evidence": {
+    "observed_from_supplied_synthetic_brief": [
+      "Records have comparable due dates, borrowers and status fields.",
+      "The critical task is accurate return recording with preserved queue context.",
+      "The executable fixture has nine stable loan records and six overdue records at its fixed clock."
+    ],
+    "assumptions": [
+      {
+        "claim": "Staff are repeat operators",
+        "confidence": "unvalidated",
+        "consequence": "Propose relatively compact density and validate later with representative users"
+      }
+    ],
+    "user_research_status": "none",
+    "inferences": [
+      "Aligned comparable fields support cross-record date scanning; this is a design mechanism to inspect, not an empirical preference claim."
+    ]
+  },
+  "constraints": {
+    "preserve": [
+      "Existing project tokens/components if a real host app supplies them"
+    ],
+    "non_goals": [
+      "Messaging borrowers",
+      "Charging fees",
+      "Production inventory integration",
+      "Offline reconciliation"
+    ],
+    "integration_mode": "prototype_mock"
+  },
+  "content": {
+    "fixtures": "equipment-fixtures-v1",
+    "clock": "2026-10-01T12:00:00Z",
+    "locale": "en-GB",
+    "normal_record": {
+      "kit": "Field recording kit 12",
+      "borrower": "Mina Patel",
+      "due_date": "2026-09-28",
+      "status_label": "3 days overdue"
+    },
+    "stress_cases": [
+      "74-character kit name",
+      "Identical borrower surnames",
+      "No overdue loans",
+      "No filter matches",
+      "Missing accessory",
+      "Retryable save failure"
+    ]
+  },
+  "decisions": [
+    {
+      "question": "How should the collection support the critical task?",
+      "selected": "searchable-collection-return/v1",
+      "alternatives": [
+        {
+          "option": "Card grid",
+          "reason_not_selected": "Repeated imagery consumes scan space and weakens cross-row date comparison for this task"
+        },
+        {
+          "option": "Kanban",
+          "reason_not_selected": "The brief emphasizes resolving an individual loan, not moving work through stages"
+        }
+      ],
+      "rationale_type": "mechanism_based_design_inference",
+      "rationale": "Use a table for cross-row comparison and a detail view for the selected return decision.",
+      "risk": "If staff identify kits primarily by image, the table may need image support or another composition.",
+      "acceptance_ids": [
+        "TASK-RETURN-01",
+        "NARROW-01",
+        "VISUAL-01"
+      ]
+    },
+    {
+      "question": "How should narrow screens change the detail workflow?",
+      "selected": "Full detail view below the actual 900 CSS-pixel split breakpoint with preserved queue scope",
+      "alternatives": [
+        {
+          "option": "Persistent side-by-side table and detail",
+          "reason_not_selected": "Both regions become too narrow to read and operate"
+        }
+      ],
+      "rationale_type": "design_inference_to_verify",
+      "rationale": "Preserve the task and context rather than wide-screen geometry; actual narrow behavior requires runtime checks.",
+      "risk": "State restoration must be implemented and tested.",
+      "acceptance_ids": [
+        "NARROW-01",
+        "KEYBOARD-01"
+      ]
+    }
+  ],
+  "visual_direction": {
+    "attributes": [
+      "Compact operator workspace",
+      "Neutral surfaces",
+      "Aligned comparable fields",
+      "Clear selected-record action"
+    ],
+    "avoid": [
+      "Equal-emphasis decorative metric cards",
+      "Status meaning carried only by color",
+      "Clipped essential names"
+    ],
+    "system_or_pack": "Original compact operational teaching direction using system fonts; adopt host product system first in real projects"
+  },
+  "acceptance_contract": "equipment-acceptance-v1",
+  "reference_manifest": null,
+  "reference_manifest_reason": "Original direct-to-code example has no frozen visual reference",
+  "classification": "Authored design-final teaching decisions; not runtime evidence, user research, reference approval or validated usability.",
+  "source_ids": [
+    "SP-BP",
+    "SP-02",
+    "SP-03",
+    "SP-04"
+  ],
+  "provenance": "Original synthesis; source identity in docs/web-source-provenance.md; no external assets or empirical effectiveness claim"
+}

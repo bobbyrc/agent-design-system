@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>Loans · Fieldroom teaching demo</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="module" src="./app.js"></script>
+  </head>
+  <body data-view="queue">
+    <a class="skip-link" href="#workspace">Skip to loans</a>
+    <header class="app-header">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"
+          ><i></i><i></i><i></i><i></i></span
+        >Fieldroom<span class="brand-divider"></span
+        ><span class="brand-context">Equipment library</span>
+      </div>
+      <span class="demo-label"
+        ><span aria-hidden="true"></span>Teaching demo</span
+      >
+    </header>
+    <main id="workspace" tabindex="-1">
+      <div class="page-heading">
+        <div>
+          <p class="eyebrow">EQUIPMENT / LOANS</p>
+          <h1>Loans</h1>
+          <p class="page-description">
+            Check the kit. Record the return. Keep things moving.
+          </p>
+        </div>
+        <div class="fixture-date">
+          <span>Fixture date</span
+          ><time datetime="2026-10-01">Thursday, 1 October 2026</time>
+        </div>
+      </div>
+      <div class="workspace-layout">
+        <section class="queue-panel" aria-labelledby="queue-title">
+          <div class="queue-header">
+            <div>
+              <h2 id="queue-title">Overdue loans</h2>
+              <p id="queue-summary">
+                <span data-testid="queue-count">–</span> loading loans
+              </p>
+            </div>
+            <span class="queue-symbol" aria-hidden="true">↙</span>
+          </div>
+          <div class="queue-tools">
+            <div class="scope-controls" role="group" aria-label="Loan scope">
+              <button
+                type="button"
+                data-testid="scope-overdue"
+                disabled
+                aria-pressed="true"
+              >
+                Overdue <span id="overdue-total">–</span></button
+              ><button
+                type="button"
+                data-testid="scope-all"
+                disabled
+                aria-pressed="false"
+              >
+                All loans <span id="all-total">–</span>
+              </button>
+            </div>
+            <label class="search-box"
+              ><svg aria-hidden="true" viewBox="0 0 24 24">
+                <circle cx="10.5" cy="10.5" r="6.5"></circle>
+                <path d="m16 16 4.5 4.5"></path></svg
+              ><span class="sr-only">Search kits or borrowers</span
+              ><input
+                type="search"
+                data-testid="search"
+                disabled
+                placeholder="Search kits or borrowers"
+                autocomplete="off"
+            /></label>
+          </div>
+          <div id="queue-content" aria-busy="true">
+            <div class="empty-state">
+              <div class="empty-symbol" aria-hidden="true">…</div>
+              <h3>Loading loans</h3>
+              <p>Getting the teaching fixture ready.</p>
+            </div>
+          </div>
+          <div class="queue-footer">
+            <span class="footer-dot" aria-hidden="true"></span
+            ><span>Returns stay in this browser session.</span>
+          </div>
+        </section>
+        <section
+          class="detail-panel"
+          data-testid="detail"
+          aria-labelledby="detail-title"
+        >
+          <div class="detail-placeholder">
+            <h2 id="detail-title">Select a loan</h2>
+            <p>Open a kit to check its contents and record a return.</p>
+          </div>
+        </section>
+      </div>
+      <footer class="page-footer">
+        <strong>Prototype · mock inventory · 1 Oct 2026</strong
+        ><span
+          >Fictional records. No live service, borrower messages, or fees.</span
+        >
+      </footer>
+    </main>
+    <p
+      class="sr-only"
+      id="announcer"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    ></p>
+  </body>
+</html>
