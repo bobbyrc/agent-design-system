@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { chromium } from "playwright";
-import { tabFocusSample, hasVisibleFocus } from "./focus.mjs";
+import { tabFocusSample, hasVisibleFocus, snapshotFocusStyles, currentFocusSample } from "./focus.mjs";
 const css = fs.readFileSync(
   new URL("../examples/equipment/styles.css", import.meta.url),
   "utf8",
@@ -68,6 +68,32 @@ test("unrevealed skip link and hiding/clipping ancestors cannot pass focus", asy
     for (const style of ["opacity:0", "visibility:hidden", "clip-path:inset(50%)", "position:absolute;clip:rect(0,0,0,0)", "height:1px;overflow:hidden"]) {
       await page.setContent(`<style>button:focus{outline:3px solid blue}</style><div style="${style}"><div><div><div><button>Hidden focus</button></div></div></div></div>`);
       assert.equal(hasVisibleFocus(await tabFocusSample(page)), false, style);
+    }
+  } finally { await browser.close(); }
+});
+
+
+test("restored focus requires a visible changed indicator after real keyboard modality", async () => {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage({ viewport: {width:390, height:844} });
+    await page.setContent(`<style>${css}</style><button data-testid="target">Loan</button>`);
+    await snapshotFocusStyles(page);
+    await page.keyboard.press("Escape");
+    // Recreating a queue row must preserve its unfocused comparison identity.
+    await page.locator("button").evaluate(button => button.replaceWith(button.cloneNode(true)));
+    await page.getByTestId("target").focus();
+    const good = await currentFocusSample(page);
+    assert.equal(good.id, "target");
+    assert.equal(hasVisibleFocus(good), true);
+    for (const mutant of [
+      "*:focus-visible {outline:none !important;box-shadow:none !important}",
+      "button {position:fixed;left:-1000px !important}",
+      "button {opacity:0 !important}",
+    ]) {
+      const style = await page.addStyleTag({ content:mutant });
+      assert.equal(hasVisibleFocus(await currentFocusSample(page)), false, mutant);
+      await style.evaluate(element => element.remove());
     }
   } finally { await browser.close(); }
 });

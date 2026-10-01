@@ -6,14 +6,15 @@ import { execFileSync } from "node:child_process";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { chromium } from "playwright";
-import { aggregate, identity, artifact, binding } from "./evidence.mjs";
+import { aggregate, identity, artifact, binding, REVIEW_METHOD } from "./evidence.mjs";
 import { startServer } from "./server.mjs";
-import { tabFocusSample, hasVisibleFocus } from "./focus.mjs";
+import { tabFocusSample, hasVisibleFocus, snapshotFocusStyles, currentFocusSample } from "./focus.mjs";
 import { restrictToOrigin, submitWhilePending, clippedInteractiveContent } from "./runner-browser.mjs";
 const require = createRequire(import.meta.url),
   root = process.cwd(),
   current = identity(root);
-const REQUIRED = current.contract.checks.map((check) => check.id);
+const REVIEW_CHECKS = current.contract.checks.filter((check) => check.method === REVIEW_METHOD);
+const MACHINE_CHECKS = current.contract.checks.filter((check) => check.method !== REVIEW_METHOD);
 let commit = null;
 try {
   commit = execFileSync("git", ["rev-parse", "HEAD"], {
@@ -374,6 +375,10 @@ try {
     ]) {
       for (const scenario of ["", "long-content"]) {
         const page = await fresh(width, scenario);
+        await snapshotFocusStyles(page);
+        let restoredFocusEvidence = null;
+        const queueClippedControls = await clippedInteractiveContent(page);
+        assert.deepEqual(queueClippedControls, [], `queue controls clip ${width}/${scenario}`);
         await t(page, "search").fill("Mina");
         await t(page, "scope-overdue").click();
         await open(page);
@@ -388,9 +393,13 @@ try {
         assert.equal(await t(page, "return-submit").isVisible(), true);
         assert.match(await t(page, "detail").innerText(), /Mina/);
         assert.match(await t(page, "detail").innerText(), /28 Sep/);
+        const detailClippedControls = await clippedInteractiveContent(page);
+        assert.deepEqual(detailClippedControls, [], `detail controls clip ${width}/${scenario}`);
         await shot(page, `reflow-${width}-${scenario || "standard"}`);
         if (width < 900) {
-          await t(page, "back-to-queue").click();
+          await page.keyboard.press("Escape");
+          await t(page, "back-to-queue").focus();
+          await page.keyboard.press("Enter");
           await page.waitForFunction(() => document.activeElement?.dataset.testid === "loan-kit-12");
           assert.equal(await t(page, "search").inputValue(), "Mina");
           assert.equal(
@@ -401,10 +410,195 @@ try {
             await page.evaluate(() => document.activeElement?.dataset.testid),
             "loan-kit-12",
           );
+          restoredFocusEvidence = await currentFocusSample(page);
+          assert.ok(hasVisibleFocus(restoredFocusEvidence), `Back focus must be visible ${width}/${scenario}`);
         }
-        coverage.push({ width, scenario: scenario || "standard", geometry });
+        coverage.push({ width, scenario: scenario || "standard", geometry, queueClippedControls, detailClippedControls, restoredFocusEvidence });
         await page.close();
       }
+    }
+    const navigationCoverage = [];
+    async function keyboardNavigationPage(width, scenario = "") {
+      const page = await fresh(width, scenario);
+      // An unfocused baseline rejects decorative shadows and survives row renders.
+      await snapshotFocusStyles(page);
+      return page;
+    }
+    async function keyboardModality(page) {
+      // Real keyboard input establishes the modality before app-driven restoration.
+      // Escape does not activate controls or mutate this workflow.
+      await page.keyboard.press("Escape");
+    }
+    async function restoredFocus(page, id) {
+      const sample = await currentFocusSample(page);
+      assert.equal(sample.id, id);
+      if (!hasVisibleFocus(sample)) {
+        const error = new Error(`restored ${id} must be visible with a changed focus indicator`);
+        error.diagnostics = { focus: sample };
+        throw error;
+      }
+      return sample;
+    }
+    // Execute history and viewport transitions here: browser-suite success is
+    // not evidence that this acceptance run exercised its declared outcomes.
+    async function queueRestored(page, scope, focus, events) {
+      await page.waitForFunction(id => document.body.dataset.view === "queue" &&
+        document.activeElement?.dataset.testid === id, focus);
+      assert.equal(await t(page, "search").inputValue(), "Mina");
+      assert.equal(await t(page, `scope-${scope}`).getAttribute("aria-pressed"), "true");
+      assert.equal((await store(page)).events.length, events);
+      assert.deepEqual(await clippedInteractiveContent(page), []);
+      const focusEvidence = await restoredFocus(page, focus);
+      return { view: "queue", query: "Mina", scope, focus, events, focusEvidence };
+    }
+    for (const scope of ["all", "overdue"]) {
+      const page = await keyboardNavigationPage(390, "long-content");
+      await t(page, `scope-${scope}`).click();
+      await t(page, "search").fill("Mina");
+      await open(page);
+      await keyboardModality(page);
+      await page.goBack();
+      const inspected = await queueRestored(page, scope, "loan-kit-12", 0);
+      await open(page);
+      await checks(page);
+      await page.clock.install();
+      await page.clock.pauseAt(new Date());
+      await t(page, "return-submit").click();
+      await keyboardModality(page);
+      await page.goBack();
+      await page.waitForFunction(() => history.state.equipmentView === "detail");
+      assert.equal((await store(page)).pending, true);
+      assert.equal(await t(page, "detail").isVisible(), true);
+      await page.clock.runFor(700);
+      await page.clock.resume();
+      const after = await succeeded(page);
+      await keyboardModality(page);
+      await page.goBack();
+      const completed = await queueRestored(page, scope, scope === "all" ? "loan-kit-12" : "search", 1);
+      navigationCoverage.push({ type: "browser_back_before_pending_and_after_return", width: 390,
+        scenario: "long-content", inspected, pending_back_guard: true, completed, after });
+      await page.close();
+    }
+    {
+      const page = await keyboardNavigationPage(901, "long-content");
+      await t(page, "scope-all").click();
+      await t(page, "search").fill("Mina");
+      await open(page);
+      await t(page, "check-recorder").focus();
+      await keyboardModality(page);
+      await page.setViewportSize({ width: 899, height: 900 });
+      const narrowed = await queueRestored(page, "all", "loan-kit-12", 0);
+      await open(page);
+      await t(page, "back-to-queue").focus();
+      await keyboardModality(page);
+      await page.setViewportSize({ width: 901, height: 900 });
+      await page.waitForFunction(() => document.activeElement?.id === "detail-title");
+      assert.equal(await t(page, "detail").isVisible(), true);
+      const widenedFocusEvidence = await restoredFocus(page, "detail-title");
+      // Repeat crossing, then use real browser Back on the retained detail entry.
+      await t(page, "check-recorder").focus();
+      await keyboardModality(page);
+      await page.setViewportSize({ width: 899, height: 900 });
+      await queueRestored(page, "all", "loan-kit-12", 0);
+      await keyboardModality(page);
+      await page.goBack();
+      const historyAfterResize = await queueRestored(page, "all", "loan-kit-12", 0);
+      navigationCoverage.push({ type: "inspection_resize_and_browser_back", widths: [901, 899, 901, 899],
+        narrowed, widened_focus: "detail-title", widenedFocusEvidence, historyAfterResize });
+      await page.close();
+    }
+    for (const scenario of ["", "save-failure"]) {
+      const page = await keyboardNavigationPage(901, scenario);
+      await t(page, "scope-all").click();
+      await t(page, "search").fill("Mina");
+      await open(page);
+      await checks(page);
+      await page.clock.install();
+      await page.clock.pauseAt(new Date());
+      await t(page, "return-submit").click();
+      await keyboardModality(page);
+      await page.setViewportSize({ width: 899, height: 900 });
+      await page.waitForFunction(() => document.body.dataset.view === "detail" &&
+        document.activeElement?.dataset.testid === "return-status");
+      assert.equal((await store(page)).pending, true);
+      const pendingFocusEvidence = await restoredFocus(page, "return-status");
+      await page.clock.runFor(700);
+      const focus = scenario ? "return-submit" : "return-status";
+      await page.waitForFunction(id => document.activeElement?.dataset.testid === id, focus);
+      assert.equal(await t(page, focus).isVisible(), true);
+      const outcomeFocusEvidence = await restoredFocus(page, focus);
+      assert.match(await t(page, "return-status").innerText(), scenario ? /Could not save/ : /Return recorded/);
+      const outcome = await store(page);
+      assert.equal(outcome.events.length, scenario ? 0 : 1);
+      if (scenario) {
+        for (const id of ["recorder", "microphone", "cables"])
+          assert.equal(await t(page, `check-${id}`).isChecked(), true);
+        await t(page, "return-submit").click();
+        await page.clock.runFor(700);
+      }
+      await page.clock.resume();
+      const after = await succeeded(page);
+      await keyboardModality(page);
+      await page.goBack();
+      const completed = await queueRestored(page, "all", "loan-kit-12", 1);
+      navigationCoverage.push({ type: "pending_resize_outcome_retry_and_browser_back", widths: [901, 899],
+        scenario: scenario || "standard", pendingFocusEvidence, outcome_focus: focus, outcomeFocusEvidence, outcome, after, completed });
+      await page.close();
+    }
+    for (const back of ["button", "browser"]) {
+      const page = await keyboardNavigationPage(390);
+      await open(page);
+      await keyboardModality(page);
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await t(page, "check-recorder").focus();
+      await keyboardModality(page);
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.waitForFunction(() => document.body.dataset.view === "queue");
+      await open(page, "kit-13");
+      await keyboardModality(page);
+      if (back === "button") {
+        await t(page, "back-to-queue").focus();
+        await page.keyboard.press("Enter");
+      }
+      else await page.goBack();
+      await page.waitForFunction(() => document.body.dataset.view === "queue" &&
+        document.activeElement?.dataset.testid === "loan-kit-13");
+      assert.equal(await t(page, "detail").isVisible(), false);
+      const focusEvidence = await restoredFocus(page, "loan-kit-13");
+      assert.equal((await store(page)).events.length, 0);
+      assert.deepEqual(await clippedInteractiveContent(page), []);
+      navigationCoverage.push({ type: "reported_selection_resize_then_back", back,
+        widths: [390, 1440, 390], selected: "kit-13", restored_view: "queue", focus: "loan-kit-13", focusEvidence });
+      await page.close();
+    }
+    for (const origin of ["narrow_queue_all", "wide_search"]) {
+      const page = await keyboardNavigationPage(origin === "wide_search" ? 1440 : 390);
+      await open(page);
+      await checks(page);
+      await t(page, "return-submit").click();
+      const after = await succeeded(page);
+      if (origin === "narrow_queue_all") {
+        await t(page, "back-to-queue").click();
+        await page.waitForFunction(() => document.body.dataset.view === "queue");
+        await t(page, "scope-all").click();
+        await keyboardModality(page);
+      await page.setViewportSize({ width: 1440, height: 900 });
+        await t(page, "search").focus();
+      } else {
+        await t(page, "search").fill("Mina");
+      }
+      await keyboardModality(page);
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.waitForFunction(() => document.body.dataset.view === "queue");
+      assert.equal(await t(page, "detail").isVisible(), false);
+      const focus = await page.evaluate(() => document.activeElement?.dataset.testid);
+      assert.equal(focus, "search");
+      const focusEvidence = await restoredFocus(page, focus);
+      assert.equal((await store(page)).events.length, 1);
+      assert.deepEqual(await clippedInteractiveContent(page), []);
+      navigationCoverage.push({ type: "completed_outcome_does_not_reopen_on_resize", origin,
+        restored_view: "queue", focus, focusEvidence, after });
+      await page.close();
     }
     const textCoverage = [];
     for (const width of [320, 390]) {
@@ -464,6 +658,7 @@ try {
     }
     return {
       coverage,
+      navigationCoverage,
       text_enlargement:
         "Measured glyph font sizes doubled plus WCAG text-spacing override; task completed",
       textCoverage,
@@ -605,7 +800,7 @@ try {
   });
 } catch (e) {
   runtime.push({ message: e.stack, runner: true });
-  for (const id of REQUIRED.filter((x) => x !== "VISUAL-01"))
+  for (const {id} of MACHINE_CHECKS)
     if (!run.checks.some((x) => x.id === id))
       run.checks.push({
         id,
@@ -638,8 +833,8 @@ try {
       c.evidence.push(logs);
     }
   }
-  run.checks.push({
-    id: "VISUAL-01",
+  for (const {id} of REVIEW_CHECKS) run.checks.push({
+    id,
     result: "BLOCKED",
     executed: false,
     reason:

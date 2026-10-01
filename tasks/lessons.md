@@ -20,3 +20,7 @@
 - Capture and inspect both collections and task details under enlarged text. Passing overflow, geometry or axe checks does not establish readable composition. Tie regression assertions to required content and behavior rather than arbitrary system-font pixel heights.
 
 - Cross-check evidence payload bindings and recorded failures against summaries. A builder-writable evaluator boundary does not justify accepting contradictory PASS metadata; preserve honest FAIL, BLOCKED and authorized NOT_APPLICABLE outcomes.
+
+- Model task progress and navigation explicitly instead of inferring them from rendered confirmation text. When breakpoint changes replace a view, reconcile its history entry; focus-only links must not insert application navigation history. Reproduce navigation sequences after completion and resize, including opening a different item before Back.
+
+- A check's acceptance text must describe behavior executed in that check's evidence, not coverage from a separate test suite. Exercise every claimed width, clipping condition and navigation transition in the evidence-producing runner, or narrow the claim and cite separate regression coverage.

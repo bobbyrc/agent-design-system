@@ -6,7 +6,7 @@ Host runner adapters use the same [UI entry](../skills/ui-design/SKILL.md), [web
 
 | Host | Implemented scope | Verification status |
 | --- | --- | --- |
-| [Codex](codex.md) | Local project instructions and shared runner invocation | Local execution smoke is recorded with actual artifacts; installation and completion lifecycle are separate |
+| [Codex](codex.md) | Local project instructions and shared runner invocation | Local execution smoke and its actual artifacts are recorded in [PR #1](https://github.com/bobbyrc/agent-design-system/pull/1); installation and completion lifecycle are separate |
 | [Claude Code](claude-code.md) | Specification only | Unverified; no hook supplied |
 | [Pi](pi.md) | Specification only | Unverified; no extension supplied |
 | Native platforms | Outside this web increment | No native adapter or compatibility claim |

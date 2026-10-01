@@ -14,7 +14,7 @@ export function focusIndicatorChanged(before, after) {
   );
 }
 
-export async function tabFocusSample(page) {
+export async function snapshotFocusStyles(page) {
   await page.evaluate(() => {
     const style = (element) => {
       const computed = getComputedStyle(element);
@@ -26,14 +26,19 @@ export async function tabFocusSample(page) {
         outlineOffset: computed.outlineOffset,
       };
     };
+    const stableKey = element => element.dataset.testid ? `testid:${element.dataset.testid}` :
+      element.id ? `id:${element.id}` : null;
     window.__focusStyleBefore = new Map(
-      [...document.querySelectorAll("*")].map((element) => [
-        element,
-        style(element),
-      ]),
+      [...document.querySelectorAll("*")].map(element => [element, style(element)]),
     );
+    window.__focusStableBefore = new Map(
+      [...document.querySelectorAll("[id], [data-testid]")].map(element => [stableKey(element), style(element)]),
+    );
+    window.__focusStableKey = stableKey;
   });
-  await page.keyboard.press("Tab");
+}
+
+export async function currentFocusSample(page) {
   return page.evaluate(() => {
     const element = document.activeElement;
     const visible = (element, indicator = false) => {
@@ -66,7 +71,8 @@ export async function tabFocusSample(page) {
       ancestors.push({
         tag: candidate.tagName,
         visible: visible(candidate, true),
-        before: window.__focusStyleBefore.get(candidate),
+        before: window.__focusStyleBefore.get(candidate) ||
+          window.__focusStableBefore.get(window.__focusStableKey(candidate)),
         after: {
           outlineStyle: computed.outlineStyle,
           outlineWidth: computed.outlineWidth,
@@ -79,10 +85,18 @@ export async function tabFocusSample(page) {
     return {
       id: element.dataset.testid || element.id || element.tagName,
       visible: visible(element),
+      bounds: (() => { const r = element.getBoundingClientRect(); return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height}; })(),
+      viewport: { width: innerWidth, height: innerHeight },
       ancestors,
     };
   });
 }
+export async function tabFocusSample(page) {
+  await snapshotFocusStyles(page);
+  await page.keyboard.press("Tab");
+  return currentFocusSample(page);
+}
+
 export function hasVisibleFocus(sample) {
   return (
     sample.visible &&

@@ -256,3 +256,84 @@ test("standard390px queue retains identity beside due and status", async () => {
     assert.ok(geometry.dateTop < geometry.identityBottom);
   });
 });
+
+
+for (const back of ["button", "browser"]) {
+  test(`resize queue replaces obsolete detail history before ${back} Back from another loan`, async () => {
+    await withApp(390, async page => {
+      await t(page, "scope-all").click();
+      await t(page, "loan-kit-12").click();
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await page.waitForFunction(() => history.state?.equipmentView === "queue");
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.waitForFunction(() => document.body.dataset.view === "queue");
+      await t(page, "loan-kit-13").click();
+      assert.equal(await page.locator("#detail-title").innerText(), "Field recording kit 13");
+      if (back === "button") await t(page, "back-to-queue").click();
+      else await page.goBack();
+      await page.waitForFunction(() => document.body.dataset.view === "queue");
+      assert.equal(await t(page, "detail").isVisible(), false);
+      assert.equal(await t(page, "loan-kit-13").evaluate(el => el === document.activeElement), true);
+      assert.equal(await t(page, "scope-all").getAttribute("aria-pressed"), "true");
+      assert.equal((await page.evaluate(() => window.equipmentStore())).events.length, 0);
+    });
+  });
+}
+
+test("completed narrow return followed by queue and filter stays in queue after resizing twice", async () => {
+  await withApp(390, async page => {
+    await t(page, "loan-kit-12").click();
+    await checkKit(page); await t(page, "return-submit").click(); await returned(page);
+    await page.locator("#success-back").click();
+    await page.waitForFunction(() => document.body.dataset.view === "queue");
+    await t(page, "scope-all").click();
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.waitForFunction(() => !matchMedia("(max-width: 899px)").matches);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.waitForFunction(() => matchMedia("(max-width: 899px)").matches);
+    assert.equal(await t(page, "detail").isVisible(), false);
+    assert.equal(await t(page, "scope-all").getAttribute("aria-pressed"), "true");
+    assert.equal(await t(page, "scope-all").evaluate(el => el === document.activeElement), true);
+    assert.equal((await page.evaluate(() => window.equipmentStore())).events.length, 1);
+  });
+});
+
+for (const query of [null, "Elliot"]) test(`completed wide return followed by ${query ? "search input" : "Search focus"} keeps queue on narrow resize`, async () => {
+  await withApp(1440, async page => {
+    await checkKit(page); await t(page, "return-submit").click(); await returned(page);
+    if (query) await t(page, "search").fill(query);
+    else await t(page, "search").focus();
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.waitForFunction(() => matchMedia("(max-width: 899px)").matches);
+    assert.equal(await t(page, "detail").isVisible(), false);
+    assert.equal(await t(page, "search").inputValue(), query || "");
+    assert.equal(await t(page, "search").evaluate(el => el === document.activeElement), true);
+    assert.equal((await page.evaluate(() => window.equipmentStore())).events.length, 1);
+  });
+});
+
+test("skip link focuses workspace without changing narrow detail or creating a Back destination", async () => {
+  await withApp(390, async page => {
+    await t(page, "scope-all").click();
+    await t(page, "search").fill("Mina");
+    await t(page, "loan-kit-12").click();
+    const historyLength = await page.evaluate(() => history.length);
+    const url = page.url();
+    await page.locator(".skip-link").focus();
+    await page.keyboard.press("Enter");
+    assert.equal(await page.locator("#workspace").evaluate(el => el === document.activeElement), true);
+    assert.equal(await t(page, "detail").isVisible(), true);
+    assert.equal(await page.evaluate(() => history.length), historyLength);
+    assert.equal(page.url(), url);
+    await page.goBack();
+    await page.waitForFunction(() => document.body.dataset.view === "queue");
+    assert.equal(await t(page, "search").inputValue(), "Mina");
+    assert.equal(await t(page, "loan-kit-12").evaluate(el => el === document.activeElement), true);
+    await t(page, "loan-kit-12").click();
+    await page.locator(".skip-link").focus();
+    await page.keyboard.press("Enter");
+    await t(page, "back-to-queue").click();
+    await page.waitForFunction(() => document.body.dataset.view === "queue");
+    assert.equal(await t(page, "detail").isVisible(), false);
+  });
+});

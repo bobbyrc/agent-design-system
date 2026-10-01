@@ -13,6 +13,7 @@ const state = {
   lastFocus: null,
   queueScroll: 0,
   focusedControl: null,
+  taskActive: false,
 };
 let clock;
 const narrow = matchMedia("(max-width: 899px)");
@@ -107,6 +108,7 @@ function renderQueue() {
     content.innerHTML = `<div class="empty-state"><div class="empty-symbol" aria-hidden="true">${isSearch ? "⌕" : "✓"}</div><h3>${title}</h3><p>${message}</p><button class="secondary-button" id="empty-action" type="button" ${store.pending ? "disabled" : ""}>${isSearch ? "Clear search" : "View all loans"}</button></div>`;
     $("#empty-action").addEventListener("click", () => {
       if (store.pending || state.loading || state.loadError) return;
+      state.taskActive = false;
       if (isSearch) {
         state.query = "";
         $('[data-testid="search"]').value = "";
@@ -126,6 +128,7 @@ function renderQueue() {
 
 function changeScope(scope) {
   if (store.pending || state.loading || state.loadError) return;
+  state.taskActive = false;
   state.scope = scope;
   renderQueue();
   announce(
@@ -135,6 +138,7 @@ function changeScope(scope) {
 
 function openLoan(id) {
   if (store.pending || state.loading || state.loadError) return;
+  state.taskActive = false;
   const hadRowFocus = document.activeElement?.dataset.loan === id;
   state.lastFocus = `loan-${id}`;
   state.queueScroll = window.scrollY;
@@ -153,6 +157,7 @@ function openLoan(id) {
 
 function backToQueue(fromHistory = false) {
   if (store.pending) return;
+  state.taskActive = false;
   if (!fromHistory && narrow.matches && history.state?.equipmentView === "detail") {
     history.back();
     return;
@@ -164,6 +169,7 @@ function backToQueue(fromHistory = false) {
 }
 
 window.addEventListener("popstate", () => {
+  if (!history.state?.equipmentView) return;
   if (store.pending) {
     // A browser Back gesture must not leave the form during its save lock.
     history.go(1);
@@ -179,16 +185,22 @@ window.addEventListener("popstate", () => {
     $("#detail-title").focus({ preventScroll: true });
   } else backToQueue(true);
 });
+$(".skip-link").addEventListener("click", (event) => {
+  // Focus navigation must not create a fragment entry in the loan-view history.
+  event.preventDefault();
+  $("#workspace").focus();
+  $("#workspace").scrollIntoView();
+});
 document.addEventListener("focusin", (event) => {
+  if (!store.pending && event.target.closest(".queue-panel")) state.taskActive = false;
   if (event.target !== document.body) state.focusedControl = event.target;
 });
 narrow.addEventListener("change", () => {
   const active = document.activeElement === document.body ? state.focusedControl : document.activeElement;
   const wasInDetail = detail.contains(active);
   const status = $('[data-testid="return-status"]');
-  // Keep an in-flight task and its outcome visible across the layout boundary.
-  // Ordinary inspection still returns to the narrow queue.
-  if (narrow.matches && (store.pending || status?.textContent.trim())) {
+  // Preserve only the current task, not an outcome left behind while using the queue.
+  if (narrow.matches && state.taskActive) {
     document.body.dataset.view = "detail";
     const entry = { ...history.state, equipmentView: "detail", selected: state.selected };
     if (history.state?.equipmentView === "detail") history.replaceState(entry, "");
@@ -200,6 +212,9 @@ narrow.addEventListener("change", () => {
     return;
   }
   document.body.dataset.view = "queue";
+  // A layout-driven queue is also the current navigation destination. Otherwise
+  // the next detail pushes above an obsolete detail entry and Back opens it.
+  history.replaceState({ ...history.state, equipmentView: "queue", selected: null }, "");
   if (narrow.matches && wasInDetail) backToQueue(true);
   if (!narrow.matches && active?.matches(".back-button, #success-back"))
     $("#detail-title")?.focus({ preventScroll: true });
@@ -284,6 +299,7 @@ async function saveReturn(event) {
     !Object.values(state.checks[loan.id]).every(Boolean)
   )
     return;
+  state.taskActive = true;
   store.pending = true;
   lockQueue(true);
   const button = $('[data-testid="return-submit"]');
@@ -328,6 +344,7 @@ async function saveReturn(event) {
 
 $('[data-testid="search"]').addEventListener("input", (event) => {
   if (store.pending || state.loading || state.loadError) return;
+  state.taskActive = false;
   state.query = event.target.value;
   renderQueue();
   announce(`${filteredLoans().length} matching ${loanWord(filteredLoans().length)}.`);
