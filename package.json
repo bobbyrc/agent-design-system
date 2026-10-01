@@ -1,0 +1,22 @@
+{
+  "name": "agent-design-system-web-pilot",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test scripts/*.test.mjs",
+    "verify:equipment": "node scripts/verify-equipment.mjs",
+    "verify:machine": "node scripts/verify-equipment.mjs --machine-only",
+    "evidence:check": "node scripts/evidence-cli.mjs check",
+    "evidence:review": "node scripts/evidence-cli.mjs review",
+    "serve:equipment": "node scripts/server.mjs",
+    "test:browser": "node --test scripts/*.browser.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.58.2",
+    "axe-core": "4.10.3"
+  }
+}

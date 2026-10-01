@@ -1,0 +1,92 @@
+{
+  "version": "equipment-fixtures-v1",
+  "clock": "2026-10-01T12:00:00Z",
+  "loans": [
+    {
+      "id": "kit-12",
+      "kit": "Field recording kit 12",
+      "borrower": "Mina Patel",
+      "dueDate": "2026-09-28",
+      "checkedOut": "2026-09-21",
+      "reference": "LN-1042",
+      "status": "on-loan"
+    },
+    {
+      "id": "kit-13",
+      "kit": "Field recording kit 13",
+      "borrower": "Rory Chen",
+      "dueDate": "2026-09-28",
+      "checkedOut": "2026-09-21",
+      "reference": "LN-1043",
+      "status": "on-loan"
+    },
+    {
+      "id": "kit-14",
+      "kit": "Interview kit 14",
+      "borrower": "Ava Lopez",
+      "dueDate": "2026-09-29",
+      "checkedOut": "2026-09-22",
+      "reference": "LN-1047",
+      "status": "on-loan"
+    },
+    {
+      "id": "kit-15",
+      "kit": "Field recording kit 15",
+      "borrower": "Sam Osei",
+      "dueDate": "2026-09-29",
+      "checkedOut": "2026-09-22",
+      "reference": "LN-1048",
+      "status": "on-loan"
+    },
+    {
+      "id": "kit-16",
+      "kit": "Podcast kit 16",
+      "borrower": "Theo Martin",
+      "dueDate": "2026-09-30",
+      "checkedOut": "2026-09-23",
+      "reference": "LN-1051",
+      "status": "on-loan"
+    },
+    {
+      "id": "kit-17",
+      "kit": "Interview kit 17",
+      "borrower": "Jules Martin",
+      "dueDate": "2026-09-30",
+      "checkedOut": "2026-09-23",
+      "reference": "LN-1052",
+      "status": "on-loan",
+      "missingAccessory": "microphone"
+    },
+    {
+      "id": "kit-18",
+      "kit": "Field recording kit 18",
+      "borrower": "Alex Rivera",
+      "dueDate": "2026-10-02",
+      "checkedOut": "2026-09-25",
+      "reference": "LN-1057",
+      "status": "on-loan"
+    },
+    {
+      "id": "kit-19",
+      "kit": "Podcast kit 19",
+      "borrower": "Nora Okafor",
+      "dueDate": "2026-10-05",
+      "checkedOut": "2026-09-28",
+      "reference": "LN-1061",
+      "status": "on-loan"
+    },
+    {
+      "id": "kit-20",
+      "kit": "Interview kit 20",
+      "borrower": "Leo Kim",
+      "dueDate": "2026-10-06",
+      "checkedOut": "2026-09-29",
+      "reference": "LN-1063",
+      "status": "on-loan"
+    }
+  ],
+  "longContent": {
+    "kit": "Field recording kit 12 with portable stereo recorder and indoor microphone",
+    "borrower": "Mina Amara Patel-Ramachandran · Community oral history documentation project"
+  }
+}

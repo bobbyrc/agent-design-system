@@ -1,0 +1,40 @@
+# Equipment return teaching example
+
+Brief identity: `equipment-brief-v1`. Acceptance: `equipment-acceptance-v1`. Fixture: `equipment-fixtures-v1`. Integration mode: `prototype_mock`. [Decision record](design-decision.json).
+
+## Task and evidence boundary
+
+A fictional equipment-library operator finds an overdue loan, checks the kit contents, records a complete return, and sees the queue and mock inventory agree. The clock is fixed at 1 October 2026, 12:00 UTC. The first record is Field recording kit 12, Mina Patel, due 28 September: three days overdue. Six loans are overdue, with three additional current loans visible under All loans. No production records or live integrations are used.
+
+The supplied blueprint sections 6–8 and starter contracts establish the synthetic task and coverage. The supplied equipment composition was inspected as a schematic of task hierarchy, not a pixel reference, tested application, or evidence of usability. The interface is an original direct-to-code design using system fonts, locally authored geometry, and no external assets or services. The assumption that operators repeat this task is unvalidated; there is no user study.
+
+## Direction and criteria
+
+Use a compact operational workspace: warm neutral surfaces, dark text, quiet metadata, a restrained green action accent, and amber text for overdue status. The collection scope and count lead; the selected kit and content check make the next action clear. Avoid decorative metric cards and repeated imagery that competes with scanning borrower, due date, and status. All status meanings have visible words, independent of color. Kit and borrower names wrap; essential identity is never ellipsized.
+
+At 900 CSS pixels and above, a semantic table sits beside a focused loan panel. At 899 and below, the queue and full detail are separate views. Opening a loan preserves search, scope, queue scroll position, and a focus target; Back restores these. If a returned record has left the overdue queue, focus returns to Search. Table rows use native buttons, and the checklist uses native checkboxes in a fieldset. Focus has a visible blue outline. Font sizes use rem units to allow text enlargement. The design must be assessed at 1440 × 900, 768 × 1024, 390 × 844, 320 CSS-pixel reflow, 899/900/901 breakpoints, and 200% text.
+
+Visual acceptance considers hierarchy, typography/readability, composition/density, component grammar, content clarity, and state coherence. There must be no unintended page overflow, clipped names, obscured focused control, inaccessible required action, or substantiated major visual defect. Current-image independent review is required; implementation and this brief do not certify VISUAL-01.
+
+## State and behavior inventory
+
+| State                | Presentation and behavior                                                                                                                                                                                                  |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Loaded               | Default Overdue scope shows six records; All loans shows nine. Search matches kit or borrower. Mina is selected on wide screens; narrow screens open with the queue.                                                       |
+| No matches           | Search and scope stay visible; Clear search restores the current scope and focuses Search.                                                                                                                                 |
+| Empty overdue queue  | `?scenario=empty` moves all due dates into the future, retains nine current loans, and offers View all loans.                                                                                                              |
+| Loading              | `?scenario=loading` holds the initial loading view for 1.2 seconds. Scope controls are locked while fixture data loads.                                                                                                    |
+| Long content         | `?scenario=long-content` replaces Mina's kit and borrower names with expanded content. Essential text wraps in queue and detail.                                                                                           |
+| Incomplete checklist | Mark returned is disabled until Recorder, Microphone, and Cables are all checked. The explanation remains visible.                                                                                                         |
+| Missing accessory    | Kit 17 has a reported missing microphone. Its checkbox and complete-return action are disabled. Keep the loan open and contact the equipment coordinator outside this demo; exception recording is explicitly unsupported. |
+| Pending return       | A 650 ms simulated save locks the form, record selection, queue filters, and Back; saving feedback is visible and announced. A synchronous store guard prevents duplicate activation.                                      |
+| Save failure         | `?scenario=save-failure` fails the first valid save, retains the checklist, leaves loans/events unchanged, displays actionable error text, and focuses Retry return. Retry confirms one return.                            |
+| Confirmed return     | Only after the mock store update, show a return confirmation and kit availability, remove it from Overdue, update the count, and focus the visible confirmation. All loans retains the record as Returned.                 |
+
+`window.equipmentStore()` returns a cloned, teaching-only snapshot of `{loans, events, pending}`. Confirmed events contain `{type: "returned", loanId, at}`. A caller may modify its copy without mutating inventory. The store is session-local and resets on reload. UI/store agreement corroborates the prototype interaction; it is not independent production-integration evidence.
+
+## Checks and non-goals
+
+The runner owns the frozen contract and execution evidence for TASK-RETURN-01, RETURN-FAIL-01, DUPLICATE-01, NARROW-01, KEYBOARD-01, A11Y-AUTO-01, and VISUAL-01. Automated accessibility scans and keyboard checks do not establish full accessibility conformance or screen-reader usability. This authored teaching example must be excluded from held-out/generalization claims.
+
+No borrower messaging, fees, authentication, production inventory API, irreversible downstream action, offline reconciliation, partial-return exception backend, or undo is implemented. The mock label and fixed date are visible in the UI; confirmation claims only local mock availability. No framework, font download, telemetry, or third-party service is required.

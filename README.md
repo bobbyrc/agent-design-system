@@ -1,8 +1,12 @@
 # Agent design system
 
-A versioned snapshot of a shared Figma UI workflow, generic design research, and independent reviews of its reusable guidance and measurement helper. The workflow separates original design quality from reproduction fidelity and requires approval records, frozen references, deterministic checks, and independent review.
+A reusable Figma UI workflow plus a bounded original-design web teaching path, generic design research, and independent reviews of its guidance and measurement helper. The workflow separates original design quality from reproduction fidelity and requires approval records, frozen references, deterministic checks, and independent review.
 
 ## Contents
+
+- [UI design entry](skills/ui-design/SKILL.md): compact original/reproduction/repair/exploration routing.
+- [Web workflow and runnable example](docs/web-workflow.md): local commands, state checks, evidence gate and limits.
+- [Operational web profile](profiles/web-operational.md), [collection/return pattern](patterns/searchable-collection-return.md), [host adapters](adapters/README.md), and [web source provenance](docs/web-source-provenance.md).
 
 - [Shared Figma UI skill](skills/figma-ui/SKILL.md): portable workflow, templates, harness adapters, and a measurement comparison helper.
 - [Design guideline research](docs/design-guideline-research.md) and [example research](docs/design-example-research.md).
@@ -10,7 +14,7 @@ A versioned snapshot of a shared Figma UI workflow, generic design research, and
 - [Approved global guidance](guidance/AGENTS.md), [review evidence](guidance/EVIDENCE.md), and [shared workflow lessons](tasks/lessons.md).
 - [Import provenance](docs/import-provenance.md) and [source hashes](docs/import-manifest.json).
 
-Application-specific designs, artboards, screenshots, project evaluations, and mixed historical reports are excluded. This repository contains reusable workflow and research.
+Private application designs, artboards, screenshots, project evaluations and mixed historical reports are excluded. The explicitly authorized neutral equipment example is a public teaching fixture; generated screenshots and run evidence remain untracked. Teaching examples are excluded from held-out evaluation.
 
 ## Use across agent harnesses
 
@@ -35,3 +39,20 @@ python3 -m unittest discover -s skills/figma-ui/scripts -p 'test_*.py'
 ```
 
 These check deterministic measurement comparisons. They do not establish visual quality, application conformance, or Figma access.
+
+## Original web teaching path
+
+From the repository root with Node 22 or later:
+
+```sh
+npm ci
+npx playwright install chromium
+npm test
+npm run verify:machine
+```
+
+For a local preview, run `npm run serve:equipment` and open the printed `http://127.0.0.1:<port>/examples/equipment/index.html` URL. Restart after edits; Ctrl-C stops the server.
+
+The machine command reports scoped machine checks and writes `artifacts/ui-runs/<UUID>/run.json`; independent actual-image review remains required for full acceptance. `npm run verify:equipment` and `npm run evidence:check -- artifacts/ui-runs/<UUID>/run.json` fail while required evidence is BLOCKED. Follow [web workflow](docs/web-workflow.md) for review import and fresh checks after edits. The local runner and evidence are builder-writable bookkeeping; benchmark grading needs a protected evaluator. No quality superiority or blanket accessibility conformance follows from this fixture.
+
+The new repository skill is not globally installed. Select [skills/ui-design/SKILL.md](skills/ui-design/SKILL.md) explicitly or adopt it through the host’s supported project skill mechanism. Codex local execution is the initial smoke scope; Claude Code/Pi are specified but unverified, with no completion hooks supplied. Native platforms are outside this web increment. No repository license has been selected.

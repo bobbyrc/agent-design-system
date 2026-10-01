@@ -18,3 +18,8 @@ dist/
 build/
 coverage/
 *.log
+
+# Local runtime captures and browser artifacts (synthetic example only)
+artifacts/
+playwright-report/
+test-results/
