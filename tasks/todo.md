@@ -22,7 +22,7 @@ Fresh independent review accepted closure of the low-severity provenance omissio
 - [x] Add compact router, contextual pattern/profile, host capability boundary and usage documentation (skills/ui-design/, patterns/, profiles/, adapters/, docs/, README).
 - [x] Run existing and new checks on settled tree; inspect narrow/wide screenshots and interactions.
 - [x] Fresh independent defect review; resolve substantiated findings and rerun final checks.
-- [ ] Commit, open draft PR and monitor exact-head CI.
+- [x] Commit, open draft PR and monitor exact-head CI.
 
 ## Frozen integration interface
 
@@ -32,4 +32,4 @@ Required checks: TASK-RETURN-01, RETURN-FAIL-01, DUPLICATE-01, NARROW-01, KEYBOA
 
 ## Review
 
-Root verification passed 13 preserved measurement tests, 51 unit/negative tests, one actual-browser focus regression, and all seven frozen outcomes after a current-image independent review. Source review closed two verifier findings; image review closed one minor copy finding. Final feature commit `a7affb474a9024996dc45c66b5ee1cd9ae6903c9`, source hash `a50f94fdcf83b8df971c3531b857278cbbb49086af4d00b7d17cc71c655c772b`, capture run `4b80b4f4-11b1-4013-908a-c4bfad3f1340`. See [verification record](../docs/web-increment-verification.md) for scoped evidence and limitations. Draft PR and exact-head CI pending. Source pack and generated captures remain outside tracked public source; no global installation, deployment, paid service or license selection.
+Root verification passed 13 preserved measurement tests, 51 unit/negative tests, one actual-browser focus regression, and all seven frozen outcomes after a current-image independent review. Source review closed two verifier findings; image review closed one minor copy finding. Final feature commit `a7affb474a9024996dc45c66b5ee1cd9ae6903c9`, source hash `a50f94fdcf83b8df971c3531b857278cbbb49086af4d00b7d17cc71c655c772b`, capture run `4b80b4f4-11b1-4013-908a-c4bfad3f1340`. See [verification record](../docs/web-increment-verification.md) for scoped evidence and limitations. Draft [PR #1](https://github.com/bobbyrc/agent-design-system/pull/1) is open. Both push and pull-request CI for `de15632632e0b0dc4e8b65ab568854fe283f6082` passed; the [PR run](https://github.com/bobbyrc/agent-design-system/actions/runs/36871172541) produced 52 current-source captures and six machine PASS outcomes, with CI visual acceptance honestly BLOCKED. The documentation closure retains the same source hash; final PR-head CI is monitored in the task. Source pack and generated captures remain outside tracked public source; no global installation, deployment, paid service or license selection.
