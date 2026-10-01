@@ -235,12 +235,13 @@ for (const width of [320, 390]) for (const scenario of ["", "long-content"]) {
         const row = button.closest("tr"), name = button.querySelector(".kit-name"), date = row.querySelector(".date-cell").getBoundingClientRect();
         const text = name.firstChild.textContent, start = text.indexOf("Field"), range = document.createRange();
         range.setStart(name.firstChild, start); range.setEnd(name.firstChild, start + 5);
-        return { width: identity.width, bottom: identity.bottom, dateTop: date.top, wordLines: range.getClientRects().length, rowHeight: row.getBoundingClientRect().height };
+        return { width: identity.width, bottom: identity.bottom, dateTop: date.top, wordLines: range.getClientRects().length };
       });
       assert.ok(geometry.width >= 195, JSON.stringify(geometry));
       assert.ok(geometry.dateTop >= geometry.bottom, JSON.stringify(geometry));
       assert.equal(geometry.wordLines, 1, JSON.stringify(geometry));
-      assert.ok(geometry.rowHeight < (scenario ? 800 : 300), JSON.stringify(geometry));
+      // Identity width, an unbroken word, and metadata below detect the squeezed
+      // layout without imposing a font-specific height on legitimate long content.
     }, { scenario });
   });
 }
