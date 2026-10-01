@@ -1,0 +1,162 @@
+[
+  {
+    "source": "/Users/bcraig/.agents/skills/figma-ui/SKILL.md",
+    "destination": "skills/figma-ui/SKILL.md",
+    "sha256": "1ba81d570cfb3d422c4a42c9ec82a894d38fb69d5777923eac401a142fa91c16",
+    "copied_byte_for_byte": true
+  },
+  {
+    "source": "/Users/bcraig/.agents/skills/figma-ui/assets/adapter.md",
+    "destination": "skills/figma-ui/assets/adapter.md",
+    "sha256": "b0e117c7711976142905648dc13bce50389ff05515309ce3af60b01de02908df",
+    "copied_byte_for_byte": true
+  },
+  {
+    "source": "/Users/bcraig/.agents/skills/figma-ui/assets/design-brief.md",
+    "destination": "skills/figma-ui/assets/design-brief.md",
+    "sha256": "c2991d715f8b4e822bf9c696fad311719cfe88767e78b19965bda0b7cf115d0d",
+    "copied_byte_for_byte": true
+  },
+  {
+    "source": "/Users/bcraig/.agents/skills/figma-ui/assets/manifest.example.json",
+    "destination": "skills/figma-ui/assets/manifest.example.json",
+    "sha256": "39018bbb78a46ea41b421572b146739b604def6f51a8703690e1c8735be29702",
+    "copied_byte_for_byte": true
+  },
+  {
+    "source": "/Users/bcraig/.agents/skills/figma-ui/assets/project-policy.md",
+    "destination": "skills/figma-ui/assets/project-policy.md",
+    "sha256": "d4bddce97295679a7627dcf227ae1bbc506b14801fc897696374090fe875c5df",
+    "copied_byte_for_byte": true
+  },
+  {
+    "source": "/Users/bcraig/.agents/skills/figma-ui/assets/review.md",
+    "destination": "skills/figma-ui/assets/review.md",
+    "sha256": "4736c700bee5db308d60ef7a023e33fd8ef289c2def1c1654d90fa2867e3323d",
+    "copied_byte_for_byte": true
+  },
+  {
+    "source": "/Users/bcraig/.agents/skills/figma-ui/references/design.md",
+    "destination": "skills/figma-ui/references/design.md",
+    "sha256": "a50ee654a7f6a325990330744c465187e0744e29b76379935113f4997d9d1cb8",
+    "copied_byte_for_byte": true
+  },
+  {
+    "source": "/Users/bcraig/.agents/skills/figma-ui/references/harnesses.md",
+    "destination": "skills/figma-ui/references/harnesses.md",
+    "sha256": "b5f25d0b50bc1977a387304bc4e4b47aa72e92f0f2645814a49ddb28a4c0d756",
+    "copied_byte_for_byte": true
+  },
+  {
+    "source": "/Users/bcraig/.agents/skills/figma-ui/references/implement.md",
+    "destination": "skills/figma-ui/references/implement.md",
+    "sha256": "385a2e4712610e094644c465efb72bf7e3ee1a3faf1784f32fa3fd521fa6fd81",
+    "copied_byte_for_byte": true
+  },
+  {
+    "source": "/Users/bcraig/.agents/skills/figma-ui/references/measurements.md",
+    "destination": "skills/figma-ui/references/measurements.md",
+    "sha256": "d0214715980446c5dd4cdc4526be1b4b56c61d6046fbca9aac62cd1bc5a84769",
+    "copied_byte_for_byte": true
+  },
+  {
+    "source": "/Users/bcraig/.agents/skills/figma-ui/references/quality.md",
+    "destination": "skills/figma-ui/references/quality.md",
+    "sha256": "c7327ae236a3003d4d0362066f162cccf869a1d366848decf706996140dfc412",
+    "copied_byte_for_byte": true
+  },
+  {
+    "source": "/Users/bcraig/.agents/skills/figma-ui/references/verify.md",
+    "destination": "skills/figma-ui/references/verify.md",
+    "sha256": "69b28384d2a1a50af2c71bba0891e2bc114a891883f75b1e88755b341fb734b1",
+    "copied_byte_for_byte": true
+  },
+  {
+    "source": "/Users/bcraig/.agents/skills/figma-ui/scripts/compare_measurements.py",
+    "destination": "skills/figma-ui/scripts/compare_measurements.py",
+    "sha256": "f0a883d46e758c8ab6f77a99bd9697cddc2a642349f50d799fd32ba4a18fca70",
+    "copied_byte_for_byte": true
+  },
+  {
+    "source": "/Users/bcraig/.agents/skills/figma-ui/scripts/test_compare_measurements.py",
+    "destination": "skills/figma-ui/scripts/test_compare_measurements.py",
+    "sha256": "57e8da732780b44da8e83a0e8da27e0a7756fd851f5dfc79049d74e9d68beabc",
+    "copied_byte_for_byte": true
+  },
+  {
+    "source": "/Users/bcraig/agents/AGENTS.md",
+    "destination": "guidance/AGENTS.md",
+    "sha256": "3cc1603f10cd154002fcbceef02c454814d494027b00314d7337cf7c9b141063",
+    "copied_byte_for_byte": true
+  },
+  {
+    "source": "/Users/bcraig/agents/EVIDENCE.md",
+    "destination": "guidance/EVIDENCE.md",
+    "sha256": "4277240320c82fa4637f0f3cea7ca8c8124728b0bb27151b41609b1ef71dd243",
+    "copied_byte_for_byte": true
+  },
+  {
+    "source": "/Users/bcraig/agents/design-example-research.md",
+    "destination": "docs/design-example-research.md",
+    "source_sha256": "ca3d572b64b1e518bf7b40e65c5a6d8c128306f6a699aba123a8681df6ecbc17",
+    "destination_sha256": "ca3d572b64b1e518bf7b40e65c5a6d8c128306f6a699aba123a8681df6ecbc17",
+    "copied_byte_for_byte": true,
+    "changes": null
+  },
+  {
+    "source": "/Users/bcraig/agents/design-guideline-research.md",
+    "destination": "docs/design-guideline-research.md",
+    "source_sha256": "27ec98a2cc25ed5f15d9ab9ab6702735baea1fd2bb1f264373eb8ce898c3494b",
+    "destination_sha256": "27ec98a2cc25ed5f15d9ab9ab6702735baea1fd2bb1f264373eb8ce898c3494b",
+    "copied_byte_for_byte": true,
+    "changes": null
+  },
+  {
+    "source": "/Users/bcraig/agents/figma-ui-measurement-review.md",
+    "destination": "docs/figma-ui-measurement-review.md",
+    "source_sha256": "e9f4e9eca129031c4d110f872cd638ff5fbf257ed898abf300906e9d7b36b509",
+    "destination_sha256": "e9f4e9eca129031c4d110f872cd638ff5fbf257ed898abf300906e9d7b36b509",
+    "copied_byte_for_byte": true,
+    "changes": null
+  },
+  {
+    "source": "/Users/bcraig/agents/figma-ui-quality-target-review.md",
+    "destination": "docs/figma-ui-quality-target-review.md",
+    "source_sha256": "f389bb7784a0c1694aaf744099830f3e5b327fd07a268c51ec968a401c5df78c",
+    "destination_sha256": "f389bb7784a0c1694aaf744099830f3e5b327fd07a268c51ec968a401c5df78c",
+    "copied_byte_for_byte": true,
+    "changes": null
+  },
+  {
+    "source": "/Users/bcraig/agents/figma-ui-reference-check.md",
+    "destination": "docs/figma-ui-reference-check.md",
+    "source_sha256": "6e45be6d56cbb5fc702a198312a4b0a50be8dbe628423211135b97f2471fe95a",
+    "destination_sha256": "0554ad2d1b49f40496f7c28df4987bfb3c88831094bfefc7d4348db079e421bb",
+    "copied_byte_for_byte": false,
+    "changes": "Markdown local link targets only"
+  },
+  {
+    "source": "/Users/bcraig/agents/figma-ui-reference-evaluation.md",
+    "destination": "docs/figma-ui-reference-evaluation.md",
+    "source_sha256": "6cfe8de223c22697830d5e5ff84a37425bf04aec4349a2f75b57edcdd2d0f4d6",
+    "destination_sha256": "6cfe8de223c22697830d5e5ff84a37425bf04aec4349a2f75b57edcdd2d0f4d6",
+    "copied_byte_for_byte": true,
+    "changes": null
+  },
+  {
+    "source": "/Users/bcraig/agents/figma-ui-reference-review.md",
+    "destination": "docs/figma-ui-reference-review.md",
+    "source_sha256": "c45698400012093408af9550e6538a5c031bf882ffb30c9b342aa462566a12a3",
+    "destination_sha256": "c45698400012093408af9550e6538a5c031bf882ffb30c9b342aa462566a12a3",
+    "copied_byte_for_byte": true,
+    "changes": null
+  },
+  {
+    "source": "/Users/bcraig/agents/lessons.md",
+    "destination": "tasks/lessons.md",
+    "source_sha256": "0c6670b4a4a6bf08951ed78262be4ef1fc93b4b50ac986a0d9dc96f8df96ebcd",
+    "destination_sha256": "93ad85cff249724caf06a6db562a28ed7019cce012445df3e767fef04881cf12",
+    "copied_byte_for_byte": false,
+    "changes": "Removed the unrelated music CSV lesson; added the repository scope-correction rule dated 2026-10-01."
+  }
+]

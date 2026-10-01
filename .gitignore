@@ -1,0 +1,20 @@
+# Local OS, Python, and editor files
+.DS_Store
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+.vscode/
+.idea/
+
+# Credentials, local profiles, and generated bundles
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+node_modules/
+dist/
+build/
+coverage/
+*.log

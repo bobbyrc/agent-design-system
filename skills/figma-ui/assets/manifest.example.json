@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "design_system": "<project-relative design-system path>",
+  "references": [
+    {
+      "id": "<screen-state-configuration ID>",
+      "status": "proposed",
+      "figma": {
+        "file_key": "<actual file key>",
+        "node_id": "<actual selected frame node ID>",
+        "revision": "<retrievable revision or preserved export/metadata hash identity>"
+      },
+      "capture": {
+        "width": 390,
+        "height": 844,
+        "unit": "<CSS px, logical px, or platform points>",
+        "scale": 1,
+        "theme": "<actual theme>",
+        "locale": "<actual locale>",
+        "text_scale": 1,
+        "fixture": "<project-relative reproducible fixture path or fixture ID>"
+      },
+      "route": "<web route or native navigation/state recipe ID>",
+      "evidence_dir": "ui-evidence/<screen>/<state>/<configuration>"
+    }
+  ],
+  "tolerance_policy": {
+    "path": "<project-relative measurement-specific policy path>"
+  },
+  "component_map": {
+    "path": "<project-relative exact component/import/props/token mapping path>",
+    "method": "repository-local"
+  }
+}
