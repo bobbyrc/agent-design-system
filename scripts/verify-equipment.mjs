@@ -6,17 +6,14 @@ import { execFileSync } from "node:child_process";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { chromium } from "playwright";
-import { aggregate, identity, artifact, REQUIRED } from "./evidence.mjs";
+import { aggregate, identity, artifact, binding } from "./evidence.mjs";
 import { startServer } from "./server.mjs";
 import { tabFocusSample, hasVisibleFocus } from "./focus.mjs";
+import { restrictToOrigin, submitWhilePending, clippedInteractiveContent } from "./runner-browser.mjs";
 const require = createRequire(import.meta.url),
   root = process.cwd(),
   current = identity(root);
-assert.deepEqual(
-  current.contract.checks.map((x) => x.id),
-  REQUIRED,
-  "Equipment adapter expects its frozen seven checks",
-);
+const REQUIRED = current.contract.checks.map((check) => check.id);
 let commit = null;
 try {
   commit = execFileSync("git", ["rev-parse", "HEAD"], {
@@ -195,6 +192,7 @@ async function fresh(width = 1440, scenario = "") {
     timezoneId: "UTC",
   });
   page.setDefaultTimeout(10000);
+  await restrictToOrigin(page, server.url, network);
   page.on("pageerror", (e) =>
     runtime.push({ url: page.url(), message: e.message }),
   );
@@ -206,7 +204,7 @@ async function fresh(width = 1440, scenario = "") {
     network.push({
       url: r.url(),
       failure: r.failure(),
-      first_party: r.url().startsWith(server.url),
+      first_party: new URL(r.url()).origin === server.url,
     }),
   );
   page.on("response", (r) => {
@@ -214,7 +212,7 @@ async function fresh(width = 1440, scenario = "") {
       network.push({
         url: r.url(),
         status: r.status(),
-        first_party: r.url().startsWith(server.url),
+        first_party: new URL(r.url()).origin === server.url,
       });
   });
   if (scenario === "loading") {
@@ -257,6 +255,7 @@ async function runCheck(id, fn) {
   try {
     const data = await fn();
     const evidence = write(`${id}.json`, {
+      ...binding(run),
       id,
       executed: true,
       started_at: start,
@@ -272,6 +271,7 @@ async function runCheck(id, fn) {
     });
   } catch (e) {
     const evidence = write(`${id}.json`, {
+      ...binding(run),
       id,
       executed: true,
       started_at: start,
@@ -293,10 +293,6 @@ try {
   server = await startServer(root, current);
   browser = await chromium.launch();
   run.environment.browser_version = browser.version();
-  const servedIdentity = await (await fetch(server.url + "/__build")).json();
-  assert.equal(servedIdentity.source_hash, current.source_hash);
-  assert.equal(servedIdentity.fixture_hash, current.fixture_hash);
-  assert.equal(servedIdentity.contract_hash, current.contract_hash);
   await runCheck("TASK-RETURN-01", async () => {
     const page = await fresh();
     assert.equal(await t(page, "queue-count").innerText(), "6");
@@ -358,16 +354,17 @@ try {
     const page = await fresh();
     await open(page);
     await checks(page);
-    await t(page, "return-submit").click();
-    assert.equal((await store(page)).pending, true);
+    const attempts = await submitWhilePending(page);
+    assert.equal(attempts.submissions, 3, "all repeated attempts must reach submit handler");
+    assert.equal(attempts.pending, true);
+    assert.equal(attempts.events, 0, "save timer is held before inspecting pending state");
     assert.equal(await t(page, "return-submit").isDisabled(), true);
-    await page.keyboard.press("Enter");
-    await page.keyboard.press("Enter");
-    await t(page, "return-submit").dispatchEvent("click");
+    await page.clock.runFor(700);
+    await page.clock.resume();
     const after = await succeeded(page);
     assert.equal(after.events.length, 1);
     await page.close();
-    return { after, activation_attempts: 4, pending_lock: true };
+    return { after, activation_attempts: attempts.submissions, pending_lock: true };
   });
   await runCheck("NARROW-01", async () => {
     const coverage = [];
@@ -394,6 +391,7 @@ try {
         await shot(page, `reflow-${width}-${scenario || "standard"}`);
         if (width < 900) {
           await t(page, "back-to-queue").click();
+          await page.waitForFunction(() => document.activeElement?.dataset.testid === "loan-kit-12");
           assert.equal(await t(page, "search").inputValue(), "Mina");
           assert.equal(
             await t(page, "scope-overdue").getAttribute("aria-pressed"),
@@ -408,55 +406,67 @@ try {
         await page.close();
       }
     }
-    const page = await fresh(390, "long-content");
-    await open(page);
-    const beforeSizes = await page.evaluate(() =>
-      ["h1", ".detail-title", "[data-testid=search]", ".check-description"].map(
-        (selector) => ({
-          selector,
-          size: parseFloat(
-            getComputedStyle(document.querySelector(selector)).fontSize,
-          ),
-        }),
-      ),
-    );
-    await page.addStyleTag({
-      content:
-        "html {font-size:200% !important} * {line-height:1.5 !important;letter-spacing:.12em !important;word-spacing:.16em !important} p {margin-bottom:2em !important}",
-    });
-    const textSizes = await page.evaluate(
-      (before) =>
-        before.map((x) => ({
-          ...x,
-          after: parseFloat(
-            getComputedStyle(document.querySelector(x.selector)).fontSize,
-          ),
-        })),
-      beforeSizes,
-    );
-    assert.ok(
-      textSizes.every((x) => Math.abs(x.after - x.size * 2) < 0.1),
-      "effective text font sizes must double",
-    );
-    const geometry = await page.evaluate(() => ({
-      scroll: document.documentElement.scrollWidth,
-      client: document.documentElement.clientWidth,
-    }));
-    assert.ok(
-      geometry.scroll <= geometry.client + 1,
-      "enlarged/spaced text overflows page",
-    );
-    await checks(page);
-    await t(page, "return-submit").click();
-    await succeeded(page);
-    await shot(page, "text-enlargement-spacing-390");
-    await page.close();
+    const textCoverage = [];
+    for (const width of [320, 390]) {
+      const page = await fresh(width, "long-content");
+      await open(page);
+      const beforeSizes = await page.evaluate(() =>
+        ["h1", ".detail-title", "[data-testid=search]", ".check-description"].map(
+          (selector) => ({
+            selector,
+            size: parseFloat(
+              getComputedStyle(document.querySelector(selector)).fontSize,
+            ),
+          }),
+        ),
+      );
+      await page.addStyleTag({
+        content:
+          "html {font-size:200% !important} * {line-height:1.5 !important;letter-spacing:.12em !important;word-spacing:.16em !important} p {margin-bottom:2em !important}",
+      });
+      const textSizes = await page.evaluate(
+        (before) =>
+          before.map((x) => ({
+            ...x,
+            after: parseFloat(
+              getComputedStyle(document.querySelector(x.selector)).fontSize,
+            ),
+          })),
+        beforeSizes,
+      );
+      assert.ok(
+        textSizes.every((x) => Math.abs(x.after - x.size * 2) < 0.1),
+        "effective text font sizes must double",
+      );
+      const geometry = await page.evaluate(() => ({
+        scroll: document.documentElement.scrollWidth,
+        client: document.documentElement.clientWidth,
+      }));
+      assert.ok(
+        geometry.scroll <= geometry.client + 1,
+        "enlarged/spaced text overflows page",
+      );
+      const clippedControls = await clippedInteractiveContent(page);
+      assert.deepEqual(clippedControls, [], "enlarged text must not clip interactive content");
+      await shot(page, `text-enlargement-spacing-${width}`);
+      await t(page, "back-to-queue").click();
+      await page.waitForFunction(() => document.body.dataset.view === "queue" &&
+        document.activeElement?.dataset.testid === "loan-kit-12");
+      const queueClippedControls = await clippedInteractiveContent(page);
+      assert.deepEqual(queueClippedControls, [], "enlarged queue controls must not clip");
+      await shot(page, `text-enlargement-queue-${width}`);
+      await open(page);
+      await checks(page);
+      await t(page, "return-submit").click();
+      await succeeded(page);
+      await page.close();
+      textCoverage.push({width, textSizes, geometry, clippedControls, queueClippedControls});
+    }
     return {
       coverage,
       text_enlargement:
         "Measured glyph font sizes doubled plus WCAG text-spacing override; task completed",
-      textSizes,
-      geometry,
+      textCoverage,
     };
   });
   await runCheck("KEYBOARD-01", async () => {
@@ -619,11 +629,11 @@ try {
   );
   write("capture-inventory.json", captures, "inventory");
   // Runtime failures invalidate every deterministic check; no extra hidden check IDs.
-  if (runtime.length || network.some((x) => x.first_party)) {
+  if (runtime.length || network.some((x) => x.first_party || x.forbidden_external)) {
     for (const c of run.checks) {
       if (c.result === "PASS") {
         c.result = "FAIL";
-        c.reason = "Runtime/console or first-party request errors";
+        c.reason = "Runtime/console or prohibited/failed request errors";
       }
       c.evidence.push(logs);
     }

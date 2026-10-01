@@ -242,6 +242,7 @@ h1 {
 }
 .scope-controls {
   display: flex;
+  flex-wrap: wrap;
   padding: 3px;
   background: #eff2ed;
   border-radius: 7px;
@@ -249,6 +250,10 @@ h1 {
   max-width: 100%;
 }
 .scope-controls button {
+  min-width: 0;
+  max-width: 100%;
+  flex-wrap: wrap;
+  overflow-wrap: anywhere;
   border: 0;
   background: transparent;
   padding: 7px 11px;
@@ -541,12 +546,16 @@ h1 {
 }
 .loan-metadata {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 16px;
   margin: 0 0 24px;
   padding: 16px 0;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
+}
+.loan-metadata > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .loan-metadata dt {
   font-size: 0.625rem;
@@ -602,6 +611,7 @@ h1 {
 }
 .check-row > span {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
@@ -609,6 +619,7 @@ h1 {
   min-width: 0;
 }
 .check-row small {
+  max-width: 100%;
   font-size: 0.625rem;
   color: var(--muted);
   overflow-wrap: anywhere;
@@ -940,10 +951,12 @@ h1 {
   .queue-tools {
     padding: 0 19px 18px;
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 13px;
   }
   .scope-controls {
-    width: max-content;
+    width: fit-content;
+    min-width: 0;
     max-width: 100%;
   }
   .scope-controls button {
@@ -1070,5 +1083,29 @@ h1 {
     transition:
       background-color 0.12s,
       border-color 0.12s;
+  }
+}
+/* Relative to the text size: a queue that cannot fit the identity beside its
+   metadata gives the identity a complete row. Standard 390px remains unchanged. */
+.queue-panel {
+  container-type: inline-size;
+}
+@media (max-width: 599px) {
+  @container (max-width: 18em) {
+    .loans-table tr {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 10px 12px;
+    }
+    .loans-table td:first-child {
+      grid-column: 1 / -1;
+      grid-row: auto;
+    }
+    .date-cell {
+      text-align: left;
+    }
+    .loan-state {
+      max-width: none;
+      margin-top: 0;
+    }
   }
 }

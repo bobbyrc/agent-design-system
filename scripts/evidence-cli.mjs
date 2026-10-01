@@ -6,6 +6,7 @@ import {
   validateReview,
   sha,
   safeFile,
+  reviewCheckIds,
 } from "./evidence.mjs";
 const root = process.cwd();
 try {
@@ -30,29 +31,49 @@ try {
       throw new Error(
         "Review already exists; create a fresh run instead of overwriting review",
       );
-    fs.writeFileSync(target, JSON.stringify(review, null, 2) + "\n", {
-      flag: "wx",
-    });
-    run.review = {
+    const bytes = Buffer.from(JSON.stringify(review, null, 2) + "\n");
+    const candidate = structuredClone(run);
+    candidate.review = {
       path: path.relative(root, target),
-      sha256: sha(fs.readFileSync(target)),
+      sha256: sha(bytes),
     };
-    const check = run.checks.find((c) => c.id === "VISUAL-01");
-    check.result = passed ? "PASS" : "FAIL";
-    check.executed = true;
-    check.reason = passed
-      ? "Current-image independent review recorded; local CLI cannot prove inspection or independence"
-      : "Review has unresolved findings";
-    check.evidence = run.artifacts
-      .filter((x) => x.kind === "image")
-      .map((x) => x.path);
-    run.result = run.checks.some((c) => c.result === "FAIL")
+    const ids = reviewCheckIds(current.contract);
+    for (const check of candidate.checks.filter((c) => ids.includes(c.id))) {
+      check.result = passed ? "PASS" : "FAIL";
+      check.executed = true;
+      check.reason = passed
+        ? "Current-image independent review recorded; local CLI cannot prove inspection or independence"
+        : "Review has unresolved findings";
+      check.evidence = candidate.artifacts
+        .filter((x) => x.kind === "image")
+        .map((x) => x.path);
+    }
+    candidate.result = candidate.checks.some((c) => c.result === "FAIL")
       ? "FAIL"
-      : run.checks.some((c) => c.result === "BLOCKED")
+      : candidate.checks.some((c) => c.result === "BLOCKED")
         ? "BLOCKED"
         : "PASS";
-    aggregate(root, run, current);
-    fs.writeFileSync(runPath, JSON.stringify(run, null, 2) + "\n");
+    // Validate the complete candidate before publishing either file.
+    aggregate(root, candidate, current, { reviewBytes: bytes });
+    const temporary = `${runPath}.review-${process.pid}.tmp`;
+    const reviewTemporary = `${target}.${process.pid}.tmp`;
+    let published = false;
+    try {
+      fs.writeFileSync(temporary, JSON.stringify(candidate, null, 2) + "\n", {
+        flag: "wx",
+      });
+      fs.writeFileSync(reviewTemporary, bytes, { flag: "wx" });
+      fs.linkSync(reviewTemporary, target);
+      published = true;
+      fs.renameSync(temporary, runPath);
+    } catch (error) {
+      if (published) fs.unlinkSync(target);
+      throw error;
+    } finally {
+      if (fs.existsSync(temporary)) fs.unlinkSync(temporary);
+      if (fs.existsSync(reviewTemporary)) fs.unlinkSync(reviewTemporary);
+    }
+    Object.assign(run, candidate);
   }
   const outcome = aggregate(root, run, current);
   console.log(JSON.stringify(outcome));

@@ -44,7 +44,8 @@
     },
     "run_id": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9_-]+$"
     },
     "acceptance_contract_id": {
       "type": "string",
@@ -67,7 +68,24 @@
     },
     "environment": {
       "type": "object",
-      "required": ["host", "host_version", "browser_version", "tool_versions"]
+      "required": ["host", "host_version", "browser_version", "tool_versions"],
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1
+        },
+        "host_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "browser_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tool_versions": {
+          "type": "object"
+        }
+      }
     },
     "provenance": {
       "type": "object",
@@ -155,11 +173,58 @@
             "type": "string",
             "minLength": 1
           }
-        }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "image"
+                }
+              },
+              "required": ["kind"]
+            },
+            "then": {
+              "required": ["state", "width"],
+              "properties": {
+                "state": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "width": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "height": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          }
+        ]
       }
     },
     "review": {
-      "type": ["object", "null"]
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": ["path", "sha256"],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        }
+      ]
     },
     "result": {
       "enum": ["PASS", "FAIL", "BLOCKED"]

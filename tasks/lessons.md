@@ -12,3 +12,7 @@
 
 
 - A design-system repository contains reusable workflow and research. Do not include application designs, artboards, screenshots, or project evaluations unless the user explicitly requests those artifacts. Confirm artifact scope before interpreting “all design-system work” as permission to import application-specific evidence. (2026-10-01)
+
+- A skill that links to sibling repository files must state checkout-only adoption and scope in its entry and usage docs. Do not imply standalone host installation works, and distinguish web direct-to-code routing from Figma-led work.
+
+- Keep reusable verification documentation reproducible rather than recording a “current” run. Put run identities, observed counts, versions and exact-head CI outcomes in the PR; runtime support claims must match the exercised major version.

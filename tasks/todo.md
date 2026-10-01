@@ -15,8 +15,19 @@ Fresh independent review accepted closure of the low-severity provenance omissio
 
 # First working web increment
 
+## PR review repair plan
+
+- [x] Evidence unit: `scripts/evidence*`, `contracts/`; validate artifact bytes, contract requirements and review import.
+- [x] Runner unit: `scripts/focus*`, `scripts/server*`, `scripts/verify-equipment.mjs`; repair executed checks and network boundary.
+- [x] App unit: `examples/equipment/`, `scripts/equipment.browser.mjs`; repair loading, locking, navigation and reflow states.
+- [x] Documentation unit: `skills/ui-design/`, profiles, patterns, adapters and workflow docs; clarify adoption and reproducibility.
+- [x] On the settled tree, run regressions and fresh capture, then independent source and image review.
+- [ ] Push the reviewed fixes; confirm exact-head CI and address review threads.
+
+The units have disjoint file ownership. Existing artifact fields and the contract method `independent_actual_image_review` are the integration interface; method identity controls the independent review gate. Final checks and review depend on all four units.
+
 - [x] Recheck clean master HEAD and repository instructions; isolate working branch.
-- [x] Materialize canonical Library source ZIP with identity; read blueprint and inspect both original illustrations.
+- [x] Materialize AI Design Agent Framework Source Pack.zip with identity; read blueprint and inspect both original illustrations.
 - [x] Implement synthetic equipment-return web fixture (examples/equipment/: brief, fixture, UI only).
 - [x] Implement shared fail-closed evidence runner and negative tests (scripts/, contracts/, package files, CI).
 - [x] Add compact router, contextual pattern/profile, host capability boundary and usage documentation (skills/ui-design/, patterns/, profiles/, adapters/, docs/, README).
@@ -32,4 +43,4 @@ Required checks: TASK-RETURN-01, RETURN-FAIL-01, DUPLICATE-01, NARROW-01, KEYBOA
 
 ## Review
 
-Root verification passed 13 preserved measurement tests, 51 unit/negative tests, one actual-browser focus regression, and all seven frozen outcomes after a current-image independent review. Source review closed two verifier findings; image review closed one minor copy finding. Final feature commit `a7affb474a9024996dc45c66b5ee1cd9ae6903c9`, source hash `a50f94fdcf83b8df971c3531b857278cbbb49086af4d00b7d17cc71c655c772b`, capture run `4b80b4f4-11b1-4013-908a-c4bfad3f1340`. See [verification record](../docs/web-increment-verification.md) for scoped evidence and limitations. Draft [PR #1](https://github.com/bobbyrc/agent-design-system/pull/1) is open. Both push and pull-request CI for `de15632632e0b0dc4e8b65ab568854fe283f6082` passed; the [PR run](https://github.com/bobbyrc/agent-design-system/actions/runs/36871172541) produced 52 current-source captures and six machine PASS outcomes, with CI visual acceptance honestly BLOCKED. The documentation closure retains the same source hash; final PR-head CI is monitored in the task. Source pack and generated captures remain outside tracked public source; no global installation, deployment, paid service or license selection.
+The initial increment is delivered in draft [PR #1](https://github.com/bobbyrc/agent-design-system/pull/1). Independent source and actual-image review accepted the scoped repairs, including follow-up findings discovered during verification. Reproduction instructions and evidence limits are in the [verification guide](../docs/web-increment-verification.md). Run-specific results and exact-head CI belong in the PR; publication remains pending until the repair plan above is completed.

@@ -38,7 +38,8 @@
     },
     "run_id": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9_-]+$"
     },
     "reviewer": {
       "type": "string",
@@ -141,7 +142,40 @@
               "minLength": 1
             }
           }
-        }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "disposition": {
+                  "const": "resolved"
+                }
+              },
+              "required": ["disposition"]
+            },
+            "then": {
+              "required": ["resolution", "resolution_evidence"]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "disposition": {
+                  "const": "accepted"
+                }
+              },
+              "required": ["disposition"]
+            },
+            "then": {
+              "required": ["rationale"],
+              "properties": {
+                "severity": {
+                  "enum": ["minor", "preference"]
+                }
+              }
+            }
+          }
+        ]
       }
     }
   }

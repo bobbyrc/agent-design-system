@@ -4,8 +4,8 @@ A reusable Figma UI workflow plus a bounded original-design web teaching path, g
 
 ## Contents
 
-- [UI design entry](skills/ui-design/SKILL.md): compact original/reproduction/repair/exploration routing.
-- [Web workflow and runnable example](docs/web-workflow.md): local commands, state checks, evidence gate and limits. [Increment verification](docs/web-increment-verification.md) records scoped execution results.
+- [UI design entry](skills/ui-design/SKILL.md): checkout-only operational web direct-to-code routing; Figma-led work routes to `figma-ui`.
+- [Web workflow and runnable example](docs/web-workflow.md): local commands, state checks, evidence gate and limits. [Verification guide](docs/web-increment-verification.md) describes reproduction and limitations.
 - [Operational web profile](profiles/web-operational.md), [collection/return pattern](patterns/searchable-collection-return.md), [host adapters](adapters/README.md), and [web source provenance](docs/web-source-provenance.md).
 
 - [Shared Figma UI skill](skills/figma-ui/SKILL.md): portable workflow, templates, harness adapters, and a measurement comparison helper.
@@ -42,7 +42,7 @@ These check deterministic measurement comparisons. They do not establish visual 
 
 ## Original web teaching path
 
-From the repository root with Node 22 or later:
+From the repository root with Node 24 (the tested major version):
 
 ```sh
 npm ci
@@ -56,4 +56,4 @@ For a local preview, run `npm run serve:equipment` and open the printed `http://
 
 The machine command reports scoped machine checks and writes `artifacts/ui-runs/<UUID>/run.json`; independent actual-image review remains required for full acceptance. `npm run verify:equipment` and `npm run evidence:check -- artifacts/ui-runs/<UUID>/run.json` fail while required evidence is BLOCKED. Follow [web workflow](docs/web-workflow.md) for review import and fresh checks after edits. The local runner and evidence are builder-writable bookkeeping; benchmark grading needs a protected evaluator. No quality superiority or blanket accessibility conformance follows from this fixture.
 
-The new repository skill is not globally installed. Select [skills/ui-design/SKILL.md](skills/ui-design/SKILL.md) explicitly or adopt it through the host’s supported project skill mechanism. Codex local execution is the initial smoke scope; Claude Code/Pi are specified but unverified, with no completion hooks supplied. Native platforms are outside this web increment. No repository license has been selected.
+The new repository skill is not globally installed. Read [skills/ui-design/SKILL.md](skills/ui-design/SKILL.md) explicitly in this complete checkout. It depends on sibling repository files; copying or linking `skills/ui-design` alone into a host skill directory is unsupported. The installation instructions above apply to the self-contained `figma-ui` skill. Codex local execution is the initial smoke scope; Claude Code/Pi are specified but unverified, with no completion hooks supplied. Native platforms are outside this web increment. No repository license has been selected.

@@ -1,9 +1,11 @@
 ---
 name: ui-design
-description: Design an original interface, reproduce an approved reference, repair a specific UI defect, or explore alternatives. Route by task and platform; preserve the project's system and show evidence for delivered outcomes.
+description: Design, repair, or explore operational web interfaces through direct-to-code work in this repository checkout. Preserve the project system and verify delivered outcomes. For Figma-led references use figma-ui; native platforms are outside this skill scope.
 ---
 
 # UI design entry
+
+This entry is checkout-only: read it at `skills/ui-design/SKILL.md` inside the complete repository. Its sibling profiles, patterns, workflow and Figma references are required. Do not copy or link this directory alone into a host skill search path; installed-skill portability is not implemented.
 
 Identify the user task, mode, platform, existing product system, realistic content, and completion outcomes in the existing [brief](../figma-ui/assets/design-brief.md) or its project equivalent. Preserve constraints, settled decisions, and delegated authority. Record consequential choices in the brief or a linked decision record: distinguish observed facts with sources, mechanism-based inferences, and unvalidated assumptions with consequences. Ask only for a material missing decision or authority; proceed on bounded routine assumptions.
 
@@ -21,4 +23,4 @@ Build a representative slice, render it, inspect actual images, and test task ou
 
 Use Figma for requested editable output, established Figma collaboration, or exact reference/component identity. Direct-to-code web iteration may use the same decision/acceptance contracts without a mandatory Figma step; browser evidence does not establish Figma identity.
 
-Deliver the artifact, evidence tied to its current build and fixtures, and remaining limitations. Required FAIL/BLOCKED and exhausted budgets remain incomplete; NOT_APPLICABLE needs a contract-authorized condition and reason. Do not remove checks or rebaseline to pass. A local checker is bookkeeping, not a protected evaluator or automatic host enforcement. No blanket accessibility, quality-superiority, native-platform or cross-host claim follows from this web teaching fixture. Installation is explicit; repository edits do not change global skills.
+Deliver the artifact, evidence tied to its current build and fixtures, and remaining limitations. The [runner outcome contract](../../contracts/README.md) defines PASS as executed success, FAIL as an executed unmet outcome, BLOCKED as unavailable required execution/evidence, and NOT_APPLICABLE as a declared contract condition that does not apply, with a reason. Required FAIL/BLOCKED and exhausted budgets remain incomplete; NOT_APPLICABLE needs that contract-authorized condition and reason. Do not remove checks or rebaseline to pass. A local checker is bookkeeping, not a protected evaluator or automatic host enforcement. No blanket accessibility, quality-superiority, native-platform or cross-host claim follows from this web teaching fixture. Installation is explicit; repository edits do not change global skills.

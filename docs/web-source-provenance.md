@@ -4,7 +4,7 @@ This increment is original synthesis of the user-supplied source pack and the re
 
 ## Source identity
 
-Source archive: `source-pack.zip`, SHA-256 `c37be92faa777bb7da298afc64c37d1e1faef8cfe4557f28412860d9aedd3384`. Supplied pack date: 1 October 2026. IDs below identify source inputs, not installed modules or executed checks.
+Source archive: `AI Design Agent Framework Source Pack.zip`, SHA-256 `c37be92faa777bb7da298afc64c37d1e1faef8cfe4557f28412860d9aedd3384`. Supplied pack date: 1 October 2026. IDs below identify source inputs, not installed modules or executed checks.
 
 | ID | Source file | SHA-256 |
 | --- | --- | --- |

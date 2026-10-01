@@ -1,15 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
-export const REQUIRED = [
-  "TASK-RETURN-01",
-  "RETURN-FAIL-01",
-  "DUPLICATE-01",
-  "NARROW-01",
-  "KEYBOARD-01",
-  "A11Y-AUTO-01",
-  "VISUAL-01",
-];
+import { inflateSync } from "node:zlib";
+export const REVIEW_METHOD = "independent_actual_image_review";
+export const reviewCheckIds = (contract) =>
+  contract.checks.filter((c) => c.method === REVIEW_METHOD).map((c) => c.id);
 export const sha = (data) =>
   crypto.createHash("sha256").update(data).digest("hex");
 const must = (ok, message) => {
@@ -17,7 +12,114 @@ const must = (ok, message) => {
 };
 const object = (x) => x && typeof x === "object" && !Array.isArray(x);
 const digest = (x) => typeof x === "string" && /^[a-f0-9]{64}$/.test(x);
-const date = (x) => typeof x === "string" && Number.isFinite(Date.parse(x));
+const text = (x) => typeof x === "string" && x.trim().length > 0;
+function date(value) {
+  if (typeof value !== "string") return false;
+  const parts =
+    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-](\d{2}):(\d{2}))$/.exec(
+      value,
+    );
+  if (!parts || !Number.isFinite(Date.parse(value))) return false;
+  const [
+    year,
+    month,
+    day,
+    hour,
+    minute,
+    second,
+    offsetHour = 0,
+    offsetMinute = 0,
+  ] = parts
+    .slice(1)
+    .map((part) => (part === undefined ? undefined : Number(part)));
+  const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return (
+    month >= 1 &&
+    month <= 12 &&
+    day >= 1 &&
+    day <= days[month - 1] &&
+    hour <= 23 &&
+    minute <= 59 &&
+    second <= 59 &&
+    offsetHour <= 23 &&
+    offsetMinute <= 59
+  );
+}
+const runPrefix = (run) => `artifacts/ui-runs/${run.run_id}/`;
+function containedArtifact(root, relative, run) {
+  must(
+    typeof relative === "string" && relative.startsWith(runPrefix(run)),
+    "evidence outside current run directory",
+  );
+  return safeFile(root, relative);
+}
+export function pngDimensions(bytes) {
+  must(
+    bytes.length >= 33 &&
+      bytes
+        .subarray(0, 8)
+        .equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])),
+    "image evidence must be PNG",
+  );
+  let offset = 8,
+    header,
+    ended = false;
+  const data = [];
+  while (offset + 12 <= bytes.length) {
+    const size = bytes.readUInt32BE(offset),
+      type = bytes.toString("ascii", offset + 4, offset + 8);
+    must(offset + size + 12 <= bytes.length, "truncated PNG chunk");
+    let crc = 0xffffffff;
+    for (const byte of bytes.subarray(offset + 4, offset + 8 + size)) {
+      crc ^= byte;
+      for (let bit = 0; bit < 8; bit++)
+        crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0);
+    }
+    must(
+      (crc ^ 0xffffffff) >>> 0 === bytes.readUInt32BE(offset + size + 8),
+      "PNG chunk checksum mismatch",
+    );
+    const chunk = bytes.subarray(offset + 8, offset + 8 + size);
+    if (!header) {
+      must(type === "IHDR" && size === 13, "PNG IHDR required");
+      header = { width: chunk.readUInt32BE(0), height: chunk.readUInt32BE(4) };
+      must(
+        header.width > 0 &&
+          header.height > 0 &&
+          chunk[8] === 8 &&
+          [0, 2, 4, 6].includes(chunk[9]) &&
+          chunk[10] === 0 &&
+          chunk[11] === 0 &&
+          chunk[12] === 0,
+        "unsupported/malformed PNG header",
+      );
+      header.channels = { 0: 1, 2: 3, 4: 2, 6: 4 }[chunk[9]];
+    } else if (type === "IDAT") data.push(chunk);
+    if (type === "IEND") {
+      must(size === 0, "invalid PNG end");
+      ended = true;
+      offset += size + 12;
+      break;
+    }
+    offset += size + 12;
+  }
+  must(
+    ended && offset === bytes.length && data.length > 0,
+    "incomplete PNG image",
+  );
+  const expected = (1 + header.width * header.channels) * header.height;
+  const pixels = inflateSync(Buffer.concat(data), {
+    maxOutputLength: expected,
+  });
+  must(pixels.length === expected, "PNG pixel dimensions differ");
+  for (let row = 0; row < header.height; row++)
+    must(
+      pixels[row * (1 + header.width * header.channels)] <= 4,
+      "invalid PNG row filter",
+    );
+  return { width: header.width, height: header.height };
+}
 export function safeFile(root, relative) {
   must(
     typeof relative === "string" &&
@@ -69,7 +171,9 @@ export function identity(root) {
   );
   const files = [
     ...walk(root, "examples/equipment").filter(
-      (x) => !x.endsWith("/acceptance.json") && !x.endsWith("/fixtures.json"),
+      (x) =>
+        x !== "examples/equipment/acceptance.json" &&
+        x !== "examples/equipment/fixtures.json",
     ),
     ...walk(root, "scripts"),
     ...walk(root, "contracts"),
@@ -94,7 +198,7 @@ export function validateContract(c) {
     object(c) &&
       c.schema === "ui-acceptance/v1" &&
       c.illustrative_only === false &&
-      typeof c.id === "string" &&
+      text(c.id) &&
       Number.isInteger(c.revision) &&
       c.revision > 0,
     "invalid or illustrative acceptance contract",
@@ -111,8 +215,8 @@ export function validateContract(c) {
           typeof x.id === "string" &&
           x.id.trim() &&
           x.required === true &&
-          typeof x.method === "string" &&
-          typeof x.outcome === "string",
+          text(x.method) &&
+          text(x.outcome),
       ),
     "missing/duplicate/unknown frozen ID",
   );
@@ -132,6 +236,57 @@ export function validateContract(c) {
       c.viewports.length > 0,
     "malformed acceptance policy",
   );
+  must(
+    c.integration_mode === "prototype_mock" &&
+      text(c.change_policy) &&
+      Array.isArray(c.limitations) &&
+      c.limitations.every(text),
+    "malformed acceptance integration/change policy/limitations",
+  );
+  must(
+    c.states.every(text) &&
+      new Set(c.states).size === c.states.length &&
+      c.viewports.every(
+        (v) =>
+          object(v) &&
+          Number.isInteger(v.width) &&
+          v.width > 0 &&
+          Number.isInteger(v.height) &&
+          v.height > 0,
+      ),
+    "malformed acceptance states/viewports",
+  );
+  must(
+    Array.isArray(c.capture_inventory) &&
+      c.capture_inventory.length > 0 &&
+      c.capture_inventory.every(
+        (x) =>
+          object(x) &&
+          text(x.state) &&
+          Number.isInteger(x.width) &&
+          x.width > 0,
+      ) &&
+      new Set(c.capture_inventory.map((x) => `${x.state}:${x.width}`)).size ===
+        c.capture_inventory.length,
+    "invalid required capture inventory",
+  );
+  if (c.capture_equivalence_groups !== undefined) {
+    const groups = c.capture_equivalence_groups;
+    const known = new Map(c.capture_inventory.map((x) => [x.state, x.width]));
+    must(
+      Array.isArray(groups) &&
+        groups.every(
+          (group) =>
+            Array.isArray(group) &&
+            group.length >= 2 &&
+            group.every((state) => text(state) && known.has(state)) &&
+            new Set(group.map((state) => known.get(state))).size === 1,
+        ) &&
+        new Set(groups.flat()).size === groups.flat().length,
+      "invalid capture equivalence groups",
+    );
+  }
+  must(reviewCheckIds(c).length > 0, "independent image review check required");
   for (const [id, rule] of Object.entries(c.policy.not_applicable))
     must(
       ids.includes(id) &&
@@ -167,9 +322,20 @@ function verifyArtifact(root, a, run) {
   for (const [key, value] of Object.entries(binding(run)))
     must(a[key] === value, `stale artifact ${key}`);
   must(
-    sha(fs.readFileSync(safeFile(root, a.path))) === a.sha256,
+    sha(fs.readFileSync(containedArtifact(root, a.path, run))) === a.sha256,
     "evidence hash mismatch",
   );
+  if (a.kind === "image") {
+    const dimensions = pngDimensions(
+      fs.readFileSync(containedArtifact(root, a.path, run)),
+    );
+    must(
+      text(a.state) &&
+        a.width === dimensions.width &&
+        (a.height === undefined || a.height === dimensions.height),
+      "image capture dimensions/identity mismatch",
+    );
+  }
 }
 export function validateReview(review, run) {
   must(
@@ -217,6 +383,8 @@ export function validateReview(review, run) {
   );
   must(
     Array.isArray(review.input_evidence_hashes) &&
+      review.input_evidence_hashes.length > 0 &&
+      review.input_evidence_hashes.every(digest) &&
       JSON.stringify([...review.input_evidence_hashes].sort()) ===
         JSON.stringify(
           run.artifacts
@@ -268,7 +436,13 @@ export function validateReview(review, run) {
     (f) => f.disposition === "open" && f.severity !== "preference",
   );
 }
-export function aggregate(root, run, current, { machineOnly = false } = {}) {
+export function aggregate(
+  root,
+  run,
+  current,
+  { machineOnly = false, reviewBytes = null } = {},
+) {
+  validateContract(current.contract);
   must(
     object(run) &&
       run.schema === "ui-run/v1" &&
@@ -276,8 +450,16 @@ export function aggregate(root, run, current, { machineOnly = false } = {}) {
     "invalid/illustrative run schema",
   );
   must(
+    Object.hasOwn(run, "review") &&
+      (run.review === null ||
+        (object(run.review) &&
+          text(run.review.path) &&
+          digest(run.review.sha256))),
+    "missing/malformed required review field",
+  );
+  must(
     typeof run.run_id === "string" &&
-      run.run_id.length > 5 &&
+      /^[a-zA-Z0-9_-]+$/.test(run.run_id) &&
       run.acceptance_contract_id === current.contract.id,
     "invalid run identity",
   );
@@ -324,6 +506,49 @@ export function aggregate(root, run, current, { machineOnly = false } = {}) {
     "invalid artifact inventory",
   );
   run.artifacts.forEach((a) => verifyArtifact(root, a, run));
+  const runtimeArtifacts = run.artifacts.filter((a) => a.kind === "runtime");
+  const inventoryArtifacts = run.artifacts.filter(
+    (a) => a.kind === "inventory",
+  );
+  must(
+    runtimeArtifacts.length === 1 && inventoryArtifacts.length === 1,
+    "runtime and capture inventory evidence required",
+  );
+  const read = (a) =>
+    JSON.parse(fs.readFileSync(containedArtifact(root, a.path, run)));
+  const runtime = read(runtimeArtifacts[0]);
+  must(
+    runtime.served_build_identity === current.source_hash &&
+      Array.isArray(runtime.served) &&
+      Array.isArray(runtime.runtime_errors) &&
+      Array.isArray(runtime.requests),
+    "stale runtime served identity",
+  );
+  const sources = new Map(current.source.map((x) => ["/" + x.path, x.sha256]));
+  sources.set("/examples/equipment/fixtures.json", current.fixture_hash);
+  for (const served of runtime.served)
+    must(
+      served.build === current.source_hash &&
+        sources.get(served.path) === served.sha256,
+      "stale served-file evidence",
+    );
+  const captures = read(inventoryArtifacts[0]),
+    images = run.artifacts.filter((a) => a.kind === "image");
+  must(
+    Array.isArray(captures) &&
+      captures.length === images.length &&
+      new Set(captures.map((x) => x.path)).size === captures.length &&
+      captures.every((x) =>
+        images.some(
+          (a) =>
+            a.path === x.path &&
+            a.sha256 === x.sha256 &&
+            a.state === x.state &&
+            a.width === x.width,
+        ),
+      ),
+    "capture inventory differs from image bytes/identity",
+  );
   must(
     Array.isArray(run.checks) &&
       run.checks.length === current.contract.checks.length,
@@ -363,30 +588,69 @@ export function aggregate(root, run, current, { machineOnly = false } = {}) {
         "check references unknown evidence",
       );
   }
-  const visual = run.checks.find((c) => c.id === "VISUAL-01");
-  if (visual?.result === "PASS") {
+  const runtimeFailed =
+    runtime.runtime_errors.length > 0 ||
+    runtime.requests.some(
+      (request) =>
+        request.first_party === true || request.forbidden_external === true,
+    );
+  must(
+    !runtimeFailed ||
+      !run.checks.some(
+        (c) =>
+          c.result === "PASS" &&
+          !reviewCheckIds(current.contract).includes(c.id),
+      ),
+    "machine PASS contradicts recorded runtime/network failure",
+  );
+  for (const c of run.checks.filter(
+    (c) =>
+      c.executed &&
+      c.result !== "NOT_APPLICABLE" &&
+      !reviewCheckIds(current.contract).includes(c.id),
+  )) {
+    const assertions = c.evidence
+      .map((p) => run.artifacts.find((a) => a.path === p))
+      .filter((a) => a.kind === "assertions");
+    must(assertions.length > 0, "executed check requires assertion evidence");
+    for (const a of assertions) {
+      const record = read(a);
+      must(
+        record.id === c.id && record.executed === true,
+        "assertion execution/check mismatch",
+      );
+      must(
+        c.result !== "PASS" || !Object.hasOwn(record, "error"),
+        "PASS contradicts assertion error evidence",
+      );
+      for (const [key, value] of Object.entries(binding(run)))
+        must(record[key] === value, `stale assertion ${key}`);
+    }
+  }
+  const gated = reviewCheckIds(current.contract);
+  const visual = run.checks.filter((c) => gated.includes(c.id));
+  if (visual.some((c) => c.result === "PASS")) {
     must(
       object(run.review) &&
         typeof run.review.path === "string" &&
         digest(run.review.sha256),
       "visual pass needs a review record",
     );
-    const file = safeFile(root, run.review.path);
     must(
-      sha(fs.readFileSync(file)) === run.review.sha256,
-      "review record hash mismatch",
+      run.review.path.startsWith(runPrefix(run)),
+      "review outside current run directory",
     );
-    must(
-      validateReview(JSON.parse(fs.readFileSync(file)), run),
-      "unresolved review findings",
-    );
+    const bytes =
+      reviewBytes ??
+      fs.readFileSync(containedArtifact(root, run.review.path, run));
+    must(sha(bytes) === run.review.sha256, "review record hash mismatch");
+    must(validateReview(JSON.parse(bytes), run), "unresolved review findings");
   }
   if (
-    current.contract.capture_inventory &&
-    (visual?.result === "PASS" ||
-      run.checks
-        .filter((c) => c.id !== "VISUAL-01")
-        .every((c) => ["PASS", "NOT_APPLICABLE"].includes(c.result)))
+    visual.some((c) => c.result === "PASS") ||
+    run.checks
+      .filter((c) => !gated.includes(c.id))
+      .every((c) => ["PASS", "NOT_APPLICABLE"].includes(c.result))
   ) {
     must(
       Array.isArray(current.contract.capture_inventory) &&
@@ -404,8 +668,30 @@ export function aggregate(root, run, current, { machineOnly = false } = {}) {
         `missing/duplicate required capture ${required.state}/${required.width}`,
       );
   }
+  const requiredImages = run.artifacts.filter(
+    (a) =>
+      a.kind === "image" &&
+      current.contract.capture_inventory.some(
+        (c) => c.state === a.state && c.width === a.width,
+      ),
+  );
+  const hashes = new Map();
+  for (const image of requiredImages)
+    hashes.set(image.sha256, [
+      ...(hashes.get(image.sha256) || []),
+      image.state,
+    ]);
+  for (const states of hashes.values())
+    if (states.length > 1) {
+      must(
+        (current.contract.capture_equivalence_groups || []).some((group) =>
+          states.every((state) => group.includes(state)),
+        ),
+        "undeclared duplicate required capture bytes",
+      );
+    }
   const selected = run.checks.filter(
-    (c) => !machineOnly || c.id !== "VISUAL-01",
+    (c) => !machineOnly || !gated.includes(c.id),
   );
   const result = selected.some((c) => c.result === "FAIL")
     ? "FAIL"

@@ -23,6 +23,7 @@ export async function tabFocusSample(page) {
         outlineWidth: computed.outlineWidth,
         outlineColor: computed.outlineColor,
         boxShadow: computed.boxShadow,
+        outlineOffset: computed.outlineOffset,
       };
     };
     window.__focusStyleBefore = new Map(
@@ -35,37 +36,46 @@ export async function tabFocusSample(page) {
   await page.keyboard.press("Tab");
   return page.evaluate(() => {
     const element = document.activeElement;
-    const visible = (element) => {
+    const visible = (element, indicator = false) => {
       const bounds = element.getBoundingClientRect();
-      return (
-        bounds.width > 0 &&
-        bounds.height > 0 &&
-        bounds.right > 0 &&
-        bounds.left < innerWidth &&
-        bounds.bottom > 0 &&
-        bounds.top < innerHeight
-      );
+      const own = getComputedStyle(element);
+      const extent = indicator && own.outlineStyle !== "none"
+        ? Math.max(0, parseFloat(own.outlineWidth) + parseFloat(own.outlineOffset)) : 0;
+      const box = { left: bounds.left - extent, right: bounds.right + extent,
+        top: bounds.top - extent, bottom: bounds.bottom + extent };
+      if (bounds.width <= 0 || bounds.height <= 0 || box.right <= 0 ||
+          box.bottom <= 0 || box.left >= innerWidth || box.top >= innerHeight) return false;
+      for (let parent = element; parent; parent = parent.parentElement) {
+        const style = getComputedStyle(parent);
+        // Conservative geometric check, not a painted-pixel/conformance claim.
+        if (style.visibility !== "visible" || Number(style.opacity) === 0 ||
+            style.display === "none" || style.clipPath !== "none" || style.clip !== "auto") return false;
+        if (parent === element) continue;
+        const rect = parent.getBoundingClientRect();
+        const left = rect.left + parent.clientLeft, top = rect.top + parent.clientTop;
+        if (["hidden", "clip", "scroll", "auto"].includes(style.overflowX) &&
+            (box.left < left - 1 || box.right > left + parent.clientWidth + 1)) return false;
+        if (["hidden", "clip", "scroll", "auto"].includes(style.overflowY) &&
+            (box.top < top - 1 || box.bottom > top + parent.clientHeight + 1)) return false;
+      }
+      return true;
     };
-    const ancestors = [
-      element,
-      element.parentElement,
-      element.parentElement?.parentElement,
-    ]
-      .filter(Boolean)
-      .map((candidate) => {
-        const computed = getComputedStyle(candidate);
-        return {
-          tag: candidate.tagName,
-          visible: visible(candidate),
-          before: window.__focusStyleBefore.get(candidate),
-          after: {
-            outlineStyle: computed.outlineStyle,
-            outlineWidth: computed.outlineWidth,
-            outlineColor: computed.outlineColor,
-            boxShadow: computed.boxShadow,
-          },
-        };
+    const ancestors = [];
+    for (let candidate = element; candidate; candidate = candidate.parentElement) {
+      const computed = getComputedStyle(candidate);
+      ancestors.push({
+        tag: candidate.tagName,
+        visible: visible(candidate, true),
+        before: window.__focusStyleBefore.get(candidate),
+        after: {
+          outlineStyle: computed.outlineStyle,
+          outlineWidth: computed.outlineWidth,
+          outlineColor: computed.outlineColor,
+          boxShadow: computed.boxShadow,
+          outlineOffset: computed.outlineOffset,
+        },
       });
+    }
     return {
       id: element.dataset.testid || element.id || element.tagName,
       visible: visible(element),

@@ -14,7 +14,7 @@ test("actual equipment CSS focus removal fails even with decorative scope/panel 
       viewport: { width: 390, height: 844 },
     });
     await page.setContent(
-      `<style>${css}</style><div class="scope-controls"><button data-testid="scope-overdue" aria-pressed="true">Overdue</button></div><section class="detail-panel"><button class="back-button" data-testid="back-to-queue">Back to queue</button></section>`,
+      `<style>${css} body {padding:10px}</style><div class="scope-controls"><button data-testid="scope-overdue" aria-pressed="true">Overdue</button></div><section class="detail-panel"><button class="back-button" data-testid="back-to-queue">Back to queue</button></section>`,
     );
     await page.evaluate(() => {
       document.body.dataset.view = "detail";
@@ -55,4 +55,19 @@ test("actual equipment CSS focus removal fails even with decorative scope/panel 
   } finally {
     await browser.close();
   }
+});
+
+test("unrevealed skip link and hiding/clipping ancestors cannot pass focus", async () => {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await page.setContent(`<style>${css}</style><a class="skip-link" href="#target">Skip to loans</a><main id="target"></main>`);
+    assert.equal(hasVisibleFocus(await tabFocusSample(page)), true);
+    await page.setContent(`<style>${css}\n.skip-link:focus {clip-path:inset(50%) !important}</style><a class="skip-link" href="#target">Skip to loans</a><main id="target"></main>`);
+    assert.equal(hasVisibleFocus(await tabFocusSample(page)), false);
+    for (const style of ["opacity:0", "visibility:hidden", "clip-path:inset(50%)", "position:absolute;clip:rect(0,0,0,0)", "height:1px;overflow:hidden"]) {
+      await page.setContent(`<style>button:focus{outline:3px solid blue}</style><div style="${style}"><div><div><div><button>Hidden focus</button></div></div></div></div>`);
+      assert.equal(hasVisibleFocus(await tabFocusSample(page)), false, style);
+    }
+  } finally { await browser.close(); }
 });

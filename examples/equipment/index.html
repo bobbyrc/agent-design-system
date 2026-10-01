@@ -41,7 +41,7 @@
             <div>
               <h2 id="queue-title">Overdue loans</h2>
               <p id="queue-summary">
-                <span data-testid="queue-count">6</span> awaiting return
+                <span data-testid="queue-count">–</span> loading loans
               </p>
             </div>
             <span class="queue-symbol" aria-hidden="true">↙</span>
@@ -51,15 +51,17 @@
               <button
                 type="button"
                 data-testid="scope-overdue"
+                disabled
                 aria-pressed="true"
               >
-                Overdue <span id="overdue-total">6</span></button
+                Overdue <span id="overdue-total">–</span></button
               ><button
                 type="button"
                 data-testid="scope-all"
+                disabled
                 aria-pressed="false"
               >
-                All loans <span id="all-total">9</span>
+                All loans <span id="all-total">–</span>
               </button>
             </div>
             <label class="search-box"
@@ -70,6 +72,7 @@
               ><input
                 type="search"
                 data-testid="search"
+                disabled
                 placeholder="Search kits or borrowers"
                 autocomplete="off"
             /></label>

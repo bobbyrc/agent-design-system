@@ -1,6 +1,7 @@
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { safeFile, sha } from "./evidence.mjs";
 export async function startServer(
   root,
@@ -27,17 +28,6 @@ export async function startServer(
       );
     } catch {
       res.writeHead(400).end();
-      return;
-    }
-    if (pathname === "/__build") {
-      res.setHeader("Content-Type", "application/json");
-      res.end(
-        JSON.stringify({
-          source_hash: identity.source_hash,
-          fixture_hash: identity.fixture_hash,
-          contract_hash: identity.contract_hash,
-        }),
-      );
       return;
     }
     const bytes = files.get(pathname);
@@ -80,7 +70,7 @@ export async function startServer(
 // Human preview uses the same frozen-byte loopback server; no external hosts.
 if (
   process.argv[1] &&
-  path.resolve(process.argv[1]) === new URL(import.meta.url).pathname
+  fs.realpathSync(process.argv[1]) === fs.realpathSync(fileURLToPath(import.meta.url))
 ) {
   const { identity } = await import("./evidence.mjs");
   const preview = await startServer(process.cwd(), identity(process.cwd()));

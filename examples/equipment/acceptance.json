@@ -1,7 +1,7 @@
 {
   "schema": "ui-acceptance/v1",
   "id": "equipment-acceptance-v1",
-  "revision": 1,
+  "revision": 2,
   "illustrative_only": false,
   "fixture_version": "equipment-fixtures-v1",
   "integration_mode": "prototype_mock",
@@ -20,7 +20,15 @@
       "height": 900
     }
   ],
-  "additional_widths": [320, 599, 600, 601, 899, 900, 901],
+  "additional_widths": [
+    320,
+    599,
+    600,
+    601,
+    899,
+    900,
+    901
+  ],
   "breakpoint_css_px": 900,
   "states": [
     "queue",
@@ -30,7 +38,11 @@
     "failure",
     "empty",
     "loading",
-    "long-content"
+    "long-content",
+    "loading-ready",
+    "load-error",
+    "no-matches",
+    "missing-accessory"
   ],
   "checks": [
     {
@@ -55,7 +67,7 @@
       "id": "NARROW-01",
       "required": true,
       "method": "geometry_and_image_inspection",
-      "outcome": "No whole-page overflow at 320/390/768/1440 and 899/900/901px; identity/due/action usable, narrow Back preserves query/scope and restores selected row focus; long content and enlarged/spaced text included."
+      "outcome": "No whole-page overflow or clipped interactive controls at 320/390/768/1440 and 599/600/601/899/900/901px; identity/due/action usable; narrow UI and browser Back preserve query/scope/returns and restore selected row or Search focus; breakpoint changes restore a visible view and focus; long content plus 200% enlarged/spaced text at 320 and 390 included."
     },
     {
       "id": "KEYBOARD-01",
@@ -67,7 +79,7 @@
       "id": "A11Y-AUTO-01",
       "required": true,
       "method": "state_specific_accessibility_scan_and_triage",
-      "outcome": "Scan queue/detail/pending/success/failure/empty/loading/long-content plus no-matches and missing-accessory; every finding explicitly handled and unresolved findings fail."
+      "outcome": "Scan queue/detail/pending/success/failure/empty/loading/long-content at 390/768/1440 plus no-matches and missing-accessory at 1440; capture loading-ready at 390/768/1440; every finding explicitly handled and unresolved findings fail. Load-error locking is independently exercised by actual-browser regression."
     },
     {
       "id": "VISUAL-01",
@@ -304,6 +316,48 @@
     {
       "state": "missing-accessory-1440",
       "width": 1440
+    },
+    {
+      "state": "text-enlargement-spacing-320",
+      "width": 320
+    },
+    {
+      "state": "text-enlargement-queue-320",
+      "width": 320
+    },
+    {
+      "state": "text-enlargement-queue-390",
+      "width": 390
     }
+  ],
+  "capture_equivalence_groups": [
+    [
+      "reflow-390-standard",
+      "detail-390"
+    ],
+    [
+      "reflow-390-long-content",
+      "long-content-390"
+    ],
+    [
+      "reflow-768-standard",
+      "detail-768"
+    ],
+    [
+      "reflow-768-long-content",
+      "long-content-768"
+    ],
+    [
+      "queue-390",
+      "loading-ready-390"
+    ],
+    [
+      "queue-768",
+      "loading-ready-768"
+    ],
+    [
+      "queue-1440",
+      "loading-ready-1440"
+    ]
   ]
 }
