@@ -16,3 +16,7 @@
 - A skill that links to sibling repository files must state checkout-only adoption and scope in its entry and usage docs. Do not imply standalone host installation works, and distinguish web direct-to-code routing from Figma-led work.
 
 - Keep reusable verification documentation reproducible rather than recording a “current” run. Put run identities, observed counts, versions and exact-head CI outcomes in the PR; runtime support claims must match the exercised major version.
+
+- Capture and inspect both collections and task details under enlarged text. Passing overflow, geometry or axe checks does not establish readable composition. Tie regression assertions to required content and behavior rather than arbitrary system-font pixel heights.
+
+- Cross-check evidence payload bindings and recorded failures against summaries. A builder-writable evaluator boundary does not justify accepting contradictory PASS metadata; preserve honest FAIL, BLOCKED and authorized NOT_APPLICABLE outcomes.

@@ -22,7 +22,7 @@ Fresh independent review accepted closure of the low-severity provenance omissio
 - [x] App unit: `examples/equipment/`, `scripts/equipment.browser.mjs`; repair loading, locking, navigation and reflow states.
 - [x] Documentation unit: `skills/ui-design/`, profiles, patterns, adapters and workflow docs; clarify adoption and reproducibility.
 - [x] On the settled tree, run regressions and fresh capture, then independent source and image review.
-- [ ] Push the reviewed fixes; confirm exact-head CI and address review threads.
+- [x] Push the reviewed fixes; confirm exact-head CI and address review threads.
 
 The units have disjoint file ownership. Existing artifact fields and the contract method `independent_actual_image_review` are the integration interface; method identity controls the independent review gate. Final checks and review depend on all four units.
 
@@ -43,4 +43,4 @@ Required checks: TASK-RETURN-01, RETURN-FAIL-01, DUPLICATE-01, NARROW-01, KEYBOA
 
 ## Review
 
-The initial increment is delivered in draft [PR #1](https://github.com/bobbyrc/agent-design-system/pull/1). Independent source and actual-image review accepted the scoped repairs, including follow-up findings discovered during verification. Reproduction instructions and evidence limits are in the [verification guide](../docs/web-increment-verification.md). Run-specific results and exact-head CI belong in the PR; publication remains pending until the repair plan above is completed.
+The initial increment is delivered in draft [PR #1](https://github.com/bobbyrc/agent-design-system/pull/1). Independent source and actual-image review accepted the scoped repairs, including follow-up findings discovered during verification. Requested inline threads were addressed and resolved. Reproduction instructions and evidence limits are in the [verification guide](../docs/web-increment-verification.md). Run-specific results, comment dispositions and exact-head CI are recorded in the PR.
