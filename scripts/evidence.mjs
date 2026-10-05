@@ -257,6 +257,11 @@ export function validateContract(c) {
     "malformed acceptance states/viewports",
   );
   must(
+    Array.isArray(c.additional_widths) &&
+      c.additional_widths.every((width) => Number.isInteger(width) && width > 0),
+    "additional_widths must be a positive-integer array (empty allowed)",
+  );
+  must(
     Array.isArray(c.capture_inventory) &&
       c.capture_inventory.length > 0 &&
       c.capture_inventory.every(
@@ -266,7 +271,7 @@ export function validateContract(c) {
           Number.isInteger(x.width) &&
           x.width > 0,
       ) &&
-      new Set(c.capture_inventory.map((x) => `${x.state}:${x.width}`)).size ===
+      new Set(c.capture_inventory.map((x) => x.state)).size ===
         c.capture_inventory.length,
     "invalid required capture inventory",
   );
@@ -337,7 +342,42 @@ function verifyArtifact(root, a, run) {
     );
   }
 }
-export function validateReview(review, run) {
+export function accessibilityFindingId(state, width, ruleId, target) {
+  return `axe-${sha(JSON.stringify([state, width, ruleId, target]))}`;
+}
+const nodeTarget = (target) => Array.isArray(target) && target.length > 0 &&
+  target.every((selector) => text(selector) || nodeTarget(selector));
+export function accessibilityFindings(root, run) {
+  const findings = [];
+  for (const a of run.artifacts.filter((a) => a.kind === "accessibility")) {
+    const scans = JSON.parse(fs.readFileSync(containedArtifact(root, a.path, run)));
+    must(Array.isArray(scans), "malformed accessibility scans");
+    for (const scan of scans) {
+      must(
+        object(scan) && Array.isArray(scan.violations) && Array.isArray(scan.incomplete) &&
+          run.artifacts.some((image) => image.kind === "image" &&
+            image.path === scan.capture && image.state === scan.state && image.width === scan.width),
+        "accessibility scan requires matching current capture",
+      );
+      for (const rule of scan.incomplete) {
+        must(object(rule) && text(rule.id) && Array.isArray(rule.nodes) && rule.nodes.length > 0,
+          "malformed manual accessibility rule");
+        for (const node of rule.nodes) {
+          must(object(node) && nodeTarget(node.target),
+            "manual accessibility node target required");
+          const id = accessibilityFindingId(scan.state, scan.width, rule.id, node.target);
+          must(node.finding_id === id, "manual accessibility finding identity mismatch");
+          findings.push({ finding_id: id, capture: scan.capture, state: scan.state,
+            width: scan.width, rule_id: rule.id, target: node.target });
+        }
+      }
+    }
+  }
+  must(new Set(findings.map((f) => f.finding_id)).size === findings.length,
+    "duplicate manual accessibility finding identity");
+  return findings;
+}
+export function validateReview(review, run, manualFindings = []) {
   must(
     object(review) &&
       review.schema === "ui-image-review/v1" &&
@@ -395,6 +435,12 @@ export function validateReview(review, run) {
     "review task evidence inventory differs",
   );
   must(Array.isArray(review.findings), "review findings must be an array");
+  const triage = review.accessibility_triage ?? [];
+  must(Array.isArray(triage) && triage.every(object) && triage.length === manualFindings.length &&
+    new Set(triage.map((item) => item.finding_id)).size === triage.length &&
+    triage.every((item) => object(item) && manualFindings.some((f) => f.finding_id === item.finding_id) &&
+      ["open", "resolved", "accepted"].includes(item.disposition) && text(item.rationale)),
+    "every manual accessibility finding requires exact disposition and rationale");
   for (const f of review.findings) {
     must(
       object(f) &&
@@ -413,16 +459,21 @@ export function validateReview(review, run) {
         typeof f[key] === "string" && f[key].trim(),
         `finding ${key} required`,
       );
+    must(f.scope === undefined || ["capture", "global"].includes(f.scope), "invalid finding scope");
+    const relevant = run.artifacts.filter((a) => a.kind === "image" &&
+      (f.scope === "global" || (a.state === f.state && (f.capture === undefined || a.path === f.capture))));
+    must(relevant.length > 0 && (f.scope !== "global" || (f.state === "global" && f.capture === undefined)),
+      "finding state/capture must identify current images (global scope must be explicit)");
     if (f.disposition === "resolved")
       must(
         typeof f.resolution === "string" &&
           f.resolution.trim() &&
           Array.isArray(f.resolution_evidence) &&
           f.resolution_evidence.length > 0 &&
-          f.resolution_evidence.every((p) =>
-            run.artifacts.some((a) => a.path === p),
-          ),
-        "resolved finding requires current-artifact resolution rationale and evidence",
+          new Set(f.resolution_evidence).size === f.resolution_evidence.length &&
+          f.resolution_evidence.every((p) => relevant.some((a) => a.path === p)) &&
+          relevant.every((a) => f.resolution_evidence.includes(a.path)),
+        "resolved finding requires current-artifact images for its state/capture scope and resolution rationale",
       );
     if (f.disposition === "accepted")
       must(
@@ -432,7 +483,7 @@ export function validateReview(review, run) {
         "only minor/preference acceptance with rationale allowed",
       );
   }
-  return !review.findings.some(
+  return !triage.some((item) => item.disposition === "open") && !review.findings.some(
     (f) => f.disposition === "open" && f.severity !== "preference",
   );
 }
@@ -629,6 +680,11 @@ export function aggregate(
   }
   const gated = reviewCheckIds(current.contract);
   const visual = run.checks.filter((c) => gated.includes(c.id));
+  for (const check of current.contract.checks.filter((c) => c.method === "state_specific_accessibility_scan_and_triage")) {
+    if (run.checks.find((c) => c.id === check.id).result === "PASS")
+      must(run.artifacts.some((a) => a.kind === "accessibility"), "accessibility PASS requires scan evidence");
+  }
+  const manualFindings = accessibilityFindings(root, run);
   if (visual.some((c) => c.result === "PASS")) {
     must(
       object(run.review) &&
@@ -644,7 +700,7 @@ export function aggregate(
       reviewBytes ??
       fs.readFileSync(containedArtifact(root, run.review.path, run));
     must(sha(bytes) === run.review.sha256, "review record hash mismatch");
-    must(validateReview(JSON.parse(bytes), run), "unresolved review findings");
+    must(validateReview(JSON.parse(bytes), run, manualFindings), "unresolved review findings or manual accessibility checks");
   }
   if (
     visual.some((c) => c.result === "PASS") ||

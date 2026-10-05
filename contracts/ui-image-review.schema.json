@@ -140,7 +140,15 @@
             "items": {
               "type": "string",
               "minLength": 1
-            }
+            },
+            "description": "Current image paths covering the finding state/capture, or all current images for explicit global scope; runtime JSON cannot resolve a visual finding."
+          },
+          "scope": {
+            "enum": ["capture", "global"]
+          },
+          "capture": {
+            "type": "string",
+            "minLength": 1
           }
         },
         "allOf": [
@@ -177,6 +185,27 @@
           }
         ]
       }
+    },
+    "accessibility_triage": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["finding_id", "disposition", "rationale"],
+        "properties": {
+          "finding_id": {
+            "type": "string",
+            "pattern": "^axe-[a-f0-9]{64}$"
+          },
+          "disposition": {
+            "enum": ["open", "resolved", "accepted"]
+          },
+          "rationale": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "description": "Exactly one explicit triage record per incomplete accessibility node, required when such nodes exist. Open dispositions prevent acceptance."
     }
   }
 }

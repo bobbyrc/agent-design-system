@@ -21,13 +21,22 @@ Fresh independent review accepted closure of the low-severity provenance omissio
 - [x] Runner unit: `scripts/verify-equipment.mjs`, runner regression tests, and `examples/equipment/acceptance.json` if needed; execute the claimed narrow-layout checks and select the independent review check by method.
 - [x] Documentation unit: `package.json`, `package-lock.json`, `adapters/README.md`, and task files; remove the unsupported engine ceiling and link the local smoke record to PR #1.
 - [x] On the settled tree, run regressions and aggregate checks, capture fresh evidence, and complete independent source and actual-image review.
-- [ ] Push the reviewed fixes to the same draft PR; verify source/PR refs, exact-head CI, and genuinely addressed thread dispositions.
+- [x] Push the reviewed fixes to the same draft PR; verify source/PR refs, exact-head CI, and genuinely addressed thread dispositions.
 
 These units have disjoint file ownership. The contract method `independent_actual_image_review` remains the review-gate interface; the runner's NARROW-01 evidence must execute each behavior it certifies. Final verification and review depend on all three units; publication and thread closure depend on that verification. Run-specific results remain in [PR #1](https://github.com/bobbyrc/agent-design-system/pull/1).
 
 ### Follow-up review status
 
-Fresh independent source and actual-image review accepted the scoped repairs with no active findings. Runner review's visible-focus coverage finding is repaired and independently closed. Settled-tree regressions and the full local evidence aggregate passed after importing the independent review. Publication, exact-head CI and thread closure remain pending; local visual acceptance does not establish CI visual acceptance.
+Fresh independent source and actual-image review accepted the scoped repairs with no active findings. Runner review's visible-focus coverage finding is repaired and independently closed. Settled-tree regressions and the full local evidence aggregate passed after importing the independent review. The repairs were published at `d3e97c5`; exact-head CI passed and all 35 review threads were resolved. Local visual acceptance does not establish CI visual acceptance.
+
+### Evidence contract follow-up
+
+- [x] Repair acceptance validation, state-specific image resolution evidence, and manual accessibility triage; add focused regressions.
+- [x] Clarify the builder-writable trust boundary, non-overwriting review import, required width declarations, manual triage, and seven-day public CI artifact retention.
+- [ ] Run final checks and fresh captures on the settled tree, then complete fresh independent source and actual-image review.
+- [ ] Publish the newly reviewed fixes and verify exact-head CI and any newly addressed thread dispositions.
+
+The publication and 35 resolved threads at `d3e97c5` close the previous follow-up. The new implementation passed 107 unit/negative tests, 32 actual-browser regressions and 13 preserved Python tests. Fresh head-bound evidence, independent source and image review, and publication remain pending; previous acceptance does not cover the changed source or new captures. Keep private images out of the public repository and CI uploads.
 
 ## PR review repair plan
 

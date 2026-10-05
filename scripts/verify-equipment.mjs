@@ -6,7 +6,7 @@ import { execFileSync } from "node:child_process";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { chromium } from "playwright";
-import { aggregate, identity, artifact, binding, REVIEW_METHOD } from "./evidence.mjs";
+import { aggregate, identity, artifact, binding, REVIEW_METHOD, accessibilityFindingId } from "./evidence.mjs";
 import { startServer } from "./server.mjs";
 import { tabFocusSample, hasVisibleFocus, snapshotFocusStyles, currentFocusSample } from "./focus.mjs";
 import { restrictToOrigin, submitWhilePending, clippedInteractiveContent } from "./runner-browser.mjs";
@@ -149,12 +149,15 @@ async function scan(page, state) {
   scans.push({
     state,
     width: page.viewportSize().width,
+    capture: captures.find((capture) => capture.state === state && capture.width === page.viewportSize().width).path,
     violations: findings,
     incomplete: result.incomplete.map((v) => ({
       id: v.id,
       impact: v.impact,
       help: v.help,
-      nodes: v.nodes,
+      nodes: v.nodes.map((node) => ({ ...node,
+        finding_id: accessibilityFindingId(state, page.viewportSize().width, v.id, node.target),
+      })),
       disposition: "manual_review_required",
       rationale:
         "Automated scan cannot resolve this check; independent image/keyboard review scope only",

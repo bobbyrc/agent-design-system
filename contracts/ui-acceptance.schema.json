@@ -16,7 +16,8 @@
     "policy",
     "change_policy",
     "limitations",
-    "capture_inventory"
+    "capture_inventory",
+    "additional_widths"
   ],
   "properties": {
     "schema": {
@@ -161,7 +162,8 @@
           }
         }
       },
-      "uniqueItems": true
+      "uniqueItems": true,
+      "description": "Capture state names must be globally unique; executable validation enforces uniqueness before state-name equivalence lookup."
     },
     "capture_equivalence_groups": {
       "type": "array",
@@ -173,6 +175,13 @@
           "type": "string",
           "minLength": 1
         }
+      }
+    },
+    "additional_widths": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1
       }
     }
   }

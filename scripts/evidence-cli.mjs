@@ -7,7 +7,9 @@ import {
   sha,
   safeFile,
   reviewCheckIds,
+  accessibilityFindings,
 } from "./evidence.mjs";
+import { relativeEvidencePath } from "./evidence-path.mjs";
 const root = process.cwd();
 try {
   const [command, runFile, reviewFile] = process.argv.slice(2);
@@ -19,13 +21,13 @@ try {
     throw new Error(
       "Usage: node scripts/evidence-cli.mjs check <run.json> | review <run.json> <reviewer.json>",
     );
-  const runPath = safeFile(root, path.relative(root, path.resolve(runFile)));
+  const runPath = safeFile(root, relativeEvidencePath(root, path.resolve(runFile)));
   const run = JSON.parse(fs.readFileSync(runPath));
   const current = identity(root);
   aggregate(root, run, current);
   if (command === "review") {
     const review = JSON.parse(fs.readFileSync(reviewFile));
-    const passed = validateReview(review, run);
+    const passed = validateReview(review, run, accessibilityFindings(root, run));
     const target = path.join(path.dirname(runPath), "independent-review.json");
     if (fs.existsSync(target))
       throw new Error(
@@ -34,7 +36,7 @@ try {
     const bytes = Buffer.from(JSON.stringify(review, null, 2) + "\n");
     const candidate = structuredClone(run);
     candidate.review = {
-      path: path.relative(root, target),
+      path: relativeEvidencePath(root, target),
       sha256: sha(bytes),
     };
     const ids = reviewCheckIds(current.contract);

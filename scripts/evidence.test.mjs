@@ -13,7 +13,11 @@ import {
   validateReview,
   binding,
   validateContract,
+  safeFile,
+  accessibilityFindingId,
+  accessibilityFindings,
 } from "./evidence.mjs";
+import { relativeEvidencePath } from "./evidence-path.mjs";
 // Tiny valid unfiltered RGBA PNGs: real image bytes, no browser-execution claim.
 function png(width, color = 0) {
   const chunk = (type, data) => {
@@ -155,6 +159,7 @@ function fixture(t) {
   }));
   // A shared additional artifact tests task evidence changes; not a check execution.
   save("assertions.json", {}, "notes");
+  save("axe-scans.json", [], "accessibility");
   save(
     "runtime-network.json",
     {
@@ -395,7 +400,7 @@ test("review inspection event absent rejected", (t) => {
   assert.throws(() => validateReview(r, f.run), /inspection/);
 });
 const finding = {
-  state: "queue",
+  state: "queue-390",
   region: "header",
   observation: "clipping",
   consequence: "cannot read",
@@ -772,15 +777,15 @@ test("resolved major finding cannot cite nonexistent evidence", (t) => {
   ];
   assert.throws(() => validateReview(r, f.run), /current-artifact/);
 });
-test("resolved major finding may cite exact current evidence", (t) => {
+test("resolved major finding may cite relevant current image without a code change", (t) => {
   const f = fixture(t),
     r = review(f.run);
   r.findings = [
     {
       ...finding,
       disposition: "resolved",
-      resolution: "fixed",
-      resolution_evidence: [f.run.artifacts[0].path],
+      resolution: "Reassessment of the current image shows the original clipping report was mistaken",
+      resolution_evidence: [f.run.artifacts.find((a) => a.state === finding.state).path],
     },
   ];
   assert.equal(validateReview(r, f.run), true);
@@ -978,4 +983,119 @@ test("authorized not-applicable checks retain disposition with runtime diagnosti
   );
   assert.equal(aggregate(f.root, f.run, f.current).result, "BLOCKED");
   assert.equal(f.run.checks[0].result, "NOT_APPLICABLE");
+});
+
+function manualFixture(t) {
+  const f = fixture(t), image = f.run.artifacts.find((a) => a.state === finding.state);
+  const target = [".loan-returned .status-icon"];
+  const finding_id = accessibilityFindingId(image.state, image.width, "color-contrast", target);
+  mutateRecord(f, "accessibility", (scans) => scans.push({
+    state: image.state, width: image.width, capture: image.path, violations: [],
+    incomplete: [{id: "color-contrast", nodes: [{target, finding_id}]}],
+  }));
+  return {...f, finding_id};
+}
+function submitReview(f, r) {
+  const rel = `artifacts/ui-runs/${f.run.run_id}/independent-review.json`;
+  const bytes = Buffer.from(JSON.stringify(r));
+  fs.writeFileSync(path.join(f.root, rel), bytes);
+  f.run.review = {path: rel, sha256: sha(bytes)};
+  const check = f.run.checks.find((c) => c.id === "VISUAL-01");
+  Object.assign(check, {result: "PASS", executed: true, evidence: r.images.map((a) => a.path)});
+  f.run.result = "PASS";
+}
+test("missing manual triage rejects full PASS but machine zero-violation scope stays PASS", (t) => {
+  const f = manualFixture(t);
+  assert.equal(aggregate(f.root, f.run, f.current, {machineOnly:true}).result, "PASS");
+  assert.equal(aggregate(f.root, f.run, f.current).result, "BLOCKED");
+  submitReview(f, review(f.run));
+  assert.throws(() => aggregate(f.root, f.run, f.current), /manual accessibility finding/);
+});
+test("each manual node requires exact identity, explicit disposition and rationale", (t) => {
+  const f = manualFixture(t), expected = accessibilityFindings(f.root, f.run), r = review(f.run);
+  r.accessibility_triage = [{finding_id:f.finding_id, disposition:"accepted", rationale:"Synthetic test judgment only"}];
+  assert.equal(validateReview(r, f.run, expected), true);
+  submitReview(f, r);
+  assert.equal(aggregate(f.root, f.run, f.current).result, "PASS");
+  r.accessibility_triage[0].disposition = "open";
+  assert.equal(validateReview(r, f.run, expected), false);
+  submitReview(f, r);
+  assert.throws(() => aggregate(f.root, f.run, f.current), /unresolved review/);
+  for (const mutation of [
+    (x) => x.accessibility_triage[0].rationale = " ",
+    (x) => x.accessibility_triage[0].finding_id = "wrong-node",
+    (x) => x.accessibility_triage.push({...x.accessibility_triage[0]}),
+  ]) {
+    const invalid = structuredClone(r); mutation(invalid);
+    assert.throws(() => validateReview(invalid, f.run, expected), /manual accessibility finding/);
+  }
+});
+test("manual identity is stable across node ordering and changes with capture/rule/target", () => {
+  const args = ["queue-390",390,"color-contrast",[".status-icon"]];
+  const id = accessibilityFindingId(...args);
+  assert.equal(accessibilityFindingId(...structuredClone(args)), id);
+  for (const [index,value] of [[0,"detail-390"],[1,768],[2,"label"],[3,[".other-icon"]]]) {
+    const changed = structuredClone(args); changed[index]=value;
+    assert.notEqual(accessibilityFindingId(...changed),id);
+  }
+});
+test("manual accessibility metadata cannot point to unrelated capture or spoof a node ID", (t) => {
+  for (const mutation of [
+    (scans) => scans[0].capture = "runtime-network.json",
+    (scans) => scans[0].incomplete[0].nodes[0].finding_id = "spoofed",
+    (scans) => scans[0].incomplete[0].nodes[0].target = [null],
+  ]) {
+    const f = manualFixture(t); mutateRecord(f,"accessibility",mutation);
+    assert.throws(() => aggregate(f.root,f.run,f.current), /capture|identity|target/);
+  }
+});
+test("resolved visual finding rejects runtime JSON and unrelated state images", (t) => {
+  const f = fixture(t), r = review(f.run);
+  for (const a of [f.run.artifacts.find((a)=>a.kind==="runtime"),f.run.artifacts.find((a)=>a.kind==="image" && a.state!==finding.state)]) {
+    r.findings=[{...finding,disposition:"resolved",resolution:"Reassessed",resolution_evidence:[a.path]}];
+    assert.throws(() => validateReview(r,f.run), /state\/capture scope/);
+  }
+});
+test("unknown state or capture rejects even an open finding", (t) => {
+  const f = fixture(t), r = review(f.run);
+  for (const extra of [{state:"unknown"},{capture:f.run.artifacts.find((a)=>a.kind==="runtime").path},{state:"global"}]) {
+    r.findings=[{...finding,...extra}];
+    assert.throws(() => validateReview(r,f.run), /state\/capture/);
+  }
+});
+test("explicit global finding resolves only with all current images", (t) => {
+  const f=fixture(t),r=review(f.run);
+  r.findings=[{...finding,scope:"global",state:"global",disposition:"resolved",resolution:"Independent reassessment",resolution_evidence:r.images.map((a)=>a.path)}];
+  assert.equal(validateReview(r,f.run),true);
+  r.findings[0].resolution_evidence.pop();
+  assert.throws(()=>validateReview(r,f.run), /state\/capture scope/);
+});
+test("additional_widths required and positive-integer array matches schema", (t) => {
+  const f=fixture(t);
+  const schema=JSON.parse(fs.readFileSync(new URL("../contracts/ui-acceptance.schema.json",import.meta.url)));
+  assert.ok(schema.required.includes("additional_widths"));
+  assert.deepEqual(schema.properties.additional_widths,{type:"array",items:{type:"integer",minimum:1}});
+  for (const value of [undefined,null,"320",{},[0],[-1],[1.5],["320"]]) {
+    const c=structuredClone(f.current.contract); c.additional_widths=value;
+    assert.throws(()=>validateContract(c),/additional_widths/);
+  }
+  for (const value of [[],[320,390]]) {
+    const c=structuredClone(f.current.contract);c.additional_widths=value;
+    assert.doesNotThrow(()=>validateContract(c));
+  }
+});
+test("capture state names must be globally unique before state equivalence lookup", (t) => {
+  const f=fixture(t),c=structuredClone(f.current.contract);
+  c.capture_inventory.push({...c.capture_inventory[0],width:777});
+  assert.throws(()=>validateContract(c),/capture inventory/);
+});
+test("Windows native relative paths normalize to POSIX while traversal remains rejected", (t) => {
+  const f=fixture(t), target="C:\\workspace\\artifacts\\ui-runs\\test\\run.json";
+  assert.equal(relativeEvidencePath("C:\\workspace",target,path.win32),"artifacts/ui-runs/test/run.json");
+  const outside=relativeEvidencePath("C:\\workspace","C:\\outside\\run.json",path.win32);
+  assert.equal(outside,"../outside/run.json");
+  assert.throws(()=>safeFile(f.root,outside),/unsafe evidence path/);
+  const differentDrive=relativeEvidencePath("C:\\workspace","D:\\outside\\run.json",path.win32);
+  assert.match(differentDrive,/^D:/);
+  assert.throws(()=>safeFile(f.root,differentDrive));
 });
