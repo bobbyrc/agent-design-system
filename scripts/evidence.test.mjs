@@ -159,7 +159,11 @@ function fixture(t) {
   }));
   // A shared additional artifact tests task evidence changes; not a check execution.
   save("assertions.json", {}, "notes");
-  save("axe-scans.json", [], "accessibility");
+  save("axe-scans.json", current.contract.accessibility_scan_inventory.map((scan) => ({
+    ...scan, capture: run.artifacts.find((image) => image.kind === "image" &&
+      image.state === scan.state && image.width === scan.width).path,
+    violations: [], incomplete: [],
+  })), "accessibility");
   save(
     "runtime-network.json",
     {
@@ -750,6 +754,12 @@ test("short safe run ID accepted consistently with schema", (t) => {
       fs.writeFileSync(path.join(f.root, a.path), JSON.stringify(data));
       a.sha256 = sha(fs.readFileSync(path.join(f.root, a.path)));
     }
+    if (a.kind === "accessibility") {
+      const scans = JSON.parse(fs.readFileSync(path.join(f.root, a.path)));
+      for (const scan of scans) scan.capture = scan.capture.replace("test-run-123", "x");
+      fs.writeFileSync(path.join(f.root, a.path), JSON.stringify(scans));
+      a.sha256 = sha(fs.readFileSync(path.join(f.root, a.path)));
+    }
   }
   for (const c of f.run.checks)
     c.evidence = c.evidence.map((p) => p.replace("test-run-123", "x"));
@@ -793,7 +803,7 @@ test("resolved major finding may cite relevant current image without a code chan
 test("early launch failure with no images remains honestly BLOCKED", (t) => {
   const f = fixture(t);
   f.run.artifacts = f.run.artifacts.filter(
-    (a) => !["image", "assertions"].includes(a.kind),
+    (a) => !["image", "assertions", "accessibility"].includes(a.kind),
   );
   for (const c of f.run.checks) {
     c.result = "BLOCKED";
@@ -817,6 +827,7 @@ test("failed review import preserves original run and permits retry", (t) => {
   f.run.artifacts = f.run.artifacts.filter(
     (a) => a.state !== f.current.contract.capture_inventory[0].state,
   );
+  mutateRecord(f, "accessibility", (scans) => scans.splice(0, 1));
   refreshInventory(f);
   fs.writeFileSync(p, JSON.stringify(f.run));
   const original = fs.readFileSync(p);
@@ -989,10 +1000,10 @@ function manualFixture(t) {
   const f = fixture(t), image = f.run.artifacts.find((a) => a.state === finding.state);
   const target = [".loan-returned .status-icon"];
   const finding_id = accessibilityFindingId(image.state, image.width, "color-contrast", target);
-  mutateRecord(f, "accessibility", (scans) => scans.push({
-    state: image.state, width: image.width, capture: image.path, violations: [],
-    incomplete: [{id: "color-contrast", nodes: [{target, finding_id}]}],
-  }));
+  mutateRecord(f, "accessibility", (scans) => {
+    scans.find((scan) => scan.state === image.state).incomplete =
+      [{id: "color-contrast", nodes: [{target, finding_id}]}];
+  });
   return {...f, finding_id};
 }
 function submitReview(f, r) {
@@ -1098,4 +1109,54 @@ test("Windows native relative paths normalize to POSIX while traversal remains r
   const differentDrive=relativeEvidencePath("C:\\workspace","D:\\outside\\run.json",path.win32);
   assert.match(differentDrive,/^D:/);
   assert.throws(()=>safeFile(f.root,differentDrive));
+});
+
+for (const [name, mutate, expected] of [
+  ["zero scans", (scans) => scans.splice(0), /coverage/],
+  ["missing state", (scans) => scans.pop(), /coverage/],
+  ["duplicate state", (scans) => scans.push(structuredClone(scans[0])), /duplicate accessibility/],
+  ["wrong width", (scans) => scans[0].width = 768, /matching current capture/],
+  ["wrong capture", (scans, f) => scans[0].capture = f.run.artifacts.find((a) => a.kind === "runtime").path, /matching current capture/],
+  ["unrequired state", (scans, f) => {
+    const image = f.run.artifacts.find((a) => a.kind === "image" &&
+      !f.current.contract.accessibility_scan_inventory.some((scan) => scan.state === a.state));
+    Object.assign(scans[0], {state:image.state, width:image.width, capture:image.path});
+  }, /coverage/],
+]) {
+  test(`accessibility PASS rejects ${name} under both machine and full scopes`, (t) => {
+    const f = fixture(t);
+    mutateRecord(f, "accessibility", (scans) => mutate(scans, f));
+    submitReview(f, review(f.run));
+    for (const machineOnly of [true, false])
+      assert.throws(() => aggregate(f.root, f.run, f.current, {machineOnly}), expected);
+  });
+}
+test("recorded serious violations reject PASS even with a no-findings image review", (t) => {
+  const f = fixture(t);
+  mutateRecord(f, "accessibility", (scans) => scans[0].violations.push({
+    id:"color-contrast",impact:"serious",nodes:[{target:[".critical-text"]}],disposition:"unresolved",
+  }));
+  submitReview(f, review(f.run));
+  for (const machineOnly of [true,false])
+    assert.throws(() => aggregate(f.root,f.run,f.current,{machineOnly}), /PASS contradicts recorded violations/);
+  f.run.checks.find((c) => c.id === "A11Y-AUTO-01").result = "FAIL";
+  f.run.result = "FAIL";
+  assert.equal(aggregate(f.root,f.run,f.current,{machineOnly:true}).result,"FAIL");
+});
+test("present null accessibility_triage is rejected even without manual nodes", (t) => {
+  const f = fixture(t), r = review(f.run);
+  r.accessibility_triage = null;
+  assert.throws(() => validateReview(r,f.run), /manual accessibility finding/);
+  delete r.accessibility_triage;
+  assert.equal(validateReview(r,f.run),true);
+});
+test("frozen accessibility inventory must match unique current capture scopes", (t) => {
+  const f = fixture(t);
+  for (const inventory of [undefined,[],[f.current.contract.accessibility_scan_inventory[0],f.current.contract.accessibility_scan_inventory[0]],[{state:"unknown",width:390}]]) {
+    const c = structuredClone(f.current.contract);c.accessibility_scan_inventory=inventory;
+    assert.throws(() => validateContract(c), /accessibility scan inventory/);
+  }
+  assert.equal(f.current.contract.accessibility_scan_inventory.length,26);
+  const schema = JSON.parse(fs.readFileSync(new URL("../contracts/ui-acceptance.schema.json",import.meta.url)));
+  assert.ok(schema.required.includes("accessibility_scan_inventory"));
 });

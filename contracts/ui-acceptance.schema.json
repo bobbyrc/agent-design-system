@@ -17,7 +17,8 @@
     "change_policy",
     "limitations",
     "capture_inventory",
-    "additional_widths"
+    "additional_widths",
+    "accessibility_scan_inventory"
   ],
   "properties": {
     "schema": {
@@ -183,6 +184,25 @@
         "type": "integer",
         "minimum": 1
       }
+    },
+    "accessibility_scan_inventory": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["state", "width"],
+        "properties": {
+          "state": {
+            "type": "string",
+            "minLength": 1
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "uniqueItems": true,
+      "description": "Exact state/width scan inventory. Executable validation requires matching current captures, nonempty coverage when accessibility scans are required, and no duplicate state/width pairs."
     }
   }
 }

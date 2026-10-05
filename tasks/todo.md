@@ -36,7 +36,7 @@ Fresh independent source and actual-image review accepted the scoped repairs wit
 - [ ] Run final checks and fresh captures on the settled tree, then complete fresh independent source and actual-image review.
 - [ ] Publish the newly reviewed fixes and verify exact-head CI and any newly addressed thread dispositions.
 
-The publication and 35 resolved threads at `d3e97c5` close the previous follow-up. The new implementation passed 107 unit/negative tests, 32 actual-browser regressions and 13 preserved Python tests. Fresh head-bound evidence, independent source and image review, and publication remain pending; previous acceptance does not cover the changed source or new captures. Keep private images out of the public repository and CI uploads.
+The publication and 35 resolved threads at `d3e97c5` close the previous follow-up. The implementation and coverage follow-up passed 116 unit/negative tests, 32 actual-browser regressions and 13 preserved Python tests. Independent source review identified empty/missing scan coverage and recorded-violation acceptance gaps; revision 3 now freezes all 26 accessibility state/width scans and rejects contradictory PASS results and explicit null triage. Fresh head-bound evidence, independent source and image review, and publication remain pending; previous acceptance does not cover the changed source or new captures. Keep private images out of the public repository and CI uploads.
 
 ## PR review repair plan
 

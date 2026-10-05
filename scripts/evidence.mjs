@@ -275,6 +275,16 @@ export function validateContract(c) {
         c.capture_inventory.length,
     "invalid required capture inventory",
   );
+  must(
+    Array.isArray(c.accessibility_scan_inventory) &&
+      c.accessibility_scan_inventory.every((scan) => object(scan) &&
+        c.capture_inventory.some((image) => image.state === scan.state && image.width === scan.width)) &&
+      new Set(c.accessibility_scan_inventory.map((scan) => `${scan.state}:${scan.width}`)).size ===
+        c.accessibility_scan_inventory.length &&
+      (!c.checks.some((check) => check.method === "state_specific_accessibility_scan_and_triage") ||
+        c.accessibility_scan_inventory.length > 0),
+    "invalid required accessibility scan inventory",
+  );
   if (c.capture_equivalence_groups !== undefined) {
     const groups = c.capture_equivalence_groups;
     const known = new Map(c.capture_inventory.map((x) => [x.state, x.width]));
@@ -347,9 +357,12 @@ export function accessibilityFindingId(state, width, ruleId, target) {
 }
 const nodeTarget = (target) => Array.isArray(target) && target.length > 0 &&
   target.every((selector) => text(selector) || nodeTarget(selector));
-export function accessibilityFindings(root, run) {
-  const findings = [];
-  for (const a of run.artifacts.filter((a) => a.kind === "accessibility")) {
+export function accessibilityFindings(root, run, requiredScans = null) {
+  const findings = [], scanned = [];
+  const artifacts = run.artifacts.filter((a) => a.kind === "accessibility");
+  if (requiredScans !== null)
+    must(artifacts.length === 1, "accessibility PASS requires one bound scan artifact");
+  for (const a of artifacts) {
     const scans = JSON.parse(fs.readFileSync(containedArtifact(root, a.path, run)));
     must(Array.isArray(scans), "malformed accessibility scans");
     for (const scan of scans) {
@@ -359,6 +372,12 @@ export function accessibilityFindings(root, run) {
             image.path === scan.capture && image.state === scan.state && image.width === scan.width),
         "accessibility scan requires matching current capture",
       );
+      const key = `${scan.state}:${scan.width}`;
+      must(!scanned.includes(key), "duplicate accessibility scan state/width");
+      scanned.push(key);
+      if (requiredScans !== null)
+        must(scan.violations.length === 0,
+          "accessibility PASS contradicts recorded violations");
       for (const rule of scan.incomplete) {
         must(object(rule) && text(rule.id) && Array.isArray(rule.nodes) && rule.nodes.length > 0,
           "malformed manual accessibility rule");
@@ -373,6 +392,10 @@ export function accessibilityFindings(root, run) {
       }
     }
   }
+  if (requiredScans !== null)
+    must(JSON.stringify([...scanned].sort()) ===
+      JSON.stringify(requiredScans.map((scan) => `${scan.state}:${scan.width}`).sort()),
+    "accessibility scan coverage differs from frozen state/width inventory");
   must(new Set(findings.map((f) => f.finding_id)).size === findings.length,
     "duplicate manual accessibility finding identity");
   return findings;
@@ -435,7 +458,7 @@ export function validateReview(review, run, manualFindings = []) {
     "review task evidence inventory differs",
   );
   must(Array.isArray(review.findings), "review findings must be an array");
-  const triage = review.accessibility_triage ?? [];
+  const triage = review.accessibility_triage === undefined ? [] : review.accessibility_triage;
   must(Array.isArray(triage) && triage.every(object) && triage.length === manualFindings.length &&
     new Set(triage.map((item) => item.finding_id)).size === triage.length &&
     triage.every((item) => object(item) && manualFindings.some((f) => f.finding_id === item.finding_id) &&
@@ -680,11 +703,11 @@ export function aggregate(
   }
   const gated = reviewCheckIds(current.contract);
   const visual = run.checks.filter((c) => gated.includes(c.id));
-  for (const check of current.contract.checks.filter((c) => c.method === "state_specific_accessibility_scan_and_triage")) {
-    if (run.checks.find((c) => c.id === check.id).result === "PASS")
-      must(run.artifacts.some((a) => a.kind === "accessibility"), "accessibility PASS requires scan evidence");
-  }
-  const manualFindings = accessibilityFindings(root, run);
+  const accessibilityPass = current.contract.checks.some((check) =>
+    check.method === "state_specific_accessibility_scan_and_triage" &&
+    run.checks.find((c) => c.id === check.id).result === "PASS");
+  const manualFindings = accessibilityFindings(root, run,
+    accessibilityPass ? current.contract.accessibility_scan_inventory : null);
   if (visual.some((c) => c.result === "PASS")) {
     must(
       object(run.review) &&

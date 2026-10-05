@@ -1,7 +1,7 @@
 {
   "schema": "ui-acceptance/v1",
   "id": "equipment-acceptance-v1",
-  "revision": 2,
+  "revision": 3,
   "illustrative_only": false,
   "fixture_version": "equipment-fixtures-v1",
   "integration_mode": "prototype_mock",
@@ -359,5 +359,111 @@
       "queue-1440",
       "loading-ready-1440"
     ]
+  ],
+  "accessibility_scan_inventory": [
+    {
+      "state": "queue-390",
+      "width": 390
+    },
+    {
+      "state": "detail-390",
+      "width": 390
+    },
+    {
+      "state": "pending-390",
+      "width": 390
+    },
+    {
+      "state": "success-390",
+      "width": 390
+    },
+    {
+      "state": "failure-390",
+      "width": 390
+    },
+    {
+      "state": "empty-390",
+      "width": 390
+    },
+    {
+      "state": "loading-390",
+      "width": 390
+    },
+    {
+      "state": "long-content-390",
+      "width": 390
+    },
+    {
+      "state": "queue-768",
+      "width": 768
+    },
+    {
+      "state": "detail-768",
+      "width": 768
+    },
+    {
+      "state": "pending-768",
+      "width": 768
+    },
+    {
+      "state": "success-768",
+      "width": 768
+    },
+    {
+      "state": "failure-768",
+      "width": 768
+    },
+    {
+      "state": "empty-768",
+      "width": 768
+    },
+    {
+      "state": "loading-768",
+      "width": 768
+    },
+    {
+      "state": "long-content-768",
+      "width": 768
+    },
+    {
+      "state": "queue-1440",
+      "width": 1440
+    },
+    {
+      "state": "detail-1440",
+      "width": 1440
+    },
+    {
+      "state": "pending-1440",
+      "width": 1440
+    },
+    {
+      "state": "success-1440",
+      "width": 1440
+    },
+    {
+      "state": "failure-1440",
+      "width": 1440
+    },
+    {
+      "state": "empty-1440",
+      "width": 1440
+    },
+    {
+      "state": "loading-1440",
+      "width": 1440
+    },
+    {
+      "state": "long-content-1440",
+      "width": 1440
+    },
+    {
+      "state": "no-matches-1440",
+      "width": 1440
+    },
+    {
+      "state": "missing-accessory-1440",
+      "width": 1440
+    }
   ]
 }
