@@ -12,3 +12,15 @@
 
 
 - A design-system repository contains reusable workflow and research. Do not include application designs, artboards, screenshots, or project evaluations unless the user explicitly requests those artifacts. Confirm artifact scope before interpreting “all design-system work” as permission to import application-specific evidence. (2026-10-01)
+
+- A skill that links to sibling repository files must state checkout-only adoption and scope in its entry and usage docs. Do not imply standalone host installation works, and distinguish web direct-to-code routing from Figma-led work.
+
+- Keep reusable verification documentation reproducible rather than recording a “current” run. Put run identities, observed counts, versions and exact-head CI outcomes in the PR; runtime support claims must match the exercised major version.
+
+- Capture and inspect both collections and task details under enlarged text. Passing overflow, geometry or axe checks does not establish readable composition. Tie regression assertions to required content and behavior rather than arbitrary system-font pixel heights.
+
+- Cross-check evidence payload bindings and recorded failures against summaries. A builder-writable evaluator boundary does not justify accepting contradictory PASS metadata; preserve honest FAIL, BLOCKED and authorized NOT_APPLICABLE outcomes.
+
+- Model task progress and navigation explicitly instead of inferring them from rendered confirmation text. When breakpoint changes replace a view, reconcile its history entry; focus-only links must not insert application navigation history. Reproduce navigation sequences after completion and resize, including opening a different item before Back.
+
+- A check's acceptance text must describe behavior executed in that check's evidence, not coverage from a separate test suite. Exercise every claimed width, clipping condition and navigation transition in the evidence-producing runner, or narrow the claim and cite separate regression coverage.

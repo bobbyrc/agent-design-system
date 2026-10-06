@@ -1,0 +1,469 @@
+{
+  "schema": "ui-acceptance/v1",
+  "id": "equipment-acceptance-v1",
+  "revision": 3,
+  "illustrative_only": false,
+  "fixture_version": "equipment-fixtures-v1",
+  "integration_mode": "prototype_mock",
+  "route": "/examples/equipment/index.html",
+  "viewports": [
+    {
+      "width": 390,
+      "height": 844
+    },
+    {
+      "width": 768,
+      "height": 1024
+    },
+    {
+      "width": 1440,
+      "height": 900
+    }
+  ],
+  "additional_widths": [
+    320,
+    599,
+    600,
+    601,
+    899,
+    900,
+    901
+  ],
+  "breakpoint_css_px": 900,
+  "states": [
+    "queue",
+    "detail",
+    "pending",
+    "success",
+    "failure",
+    "empty",
+    "loading",
+    "long-content",
+    "loading-ready",
+    "load-error",
+    "no-matches",
+    "missing-accessory"
+  ],
+  "checks": [
+    {
+      "id": "TASK-RETURN-01",
+      "required": true,
+      "method": "interaction_and_store_assertion",
+      "outcome": "Filter overdue loans by Mina, open kit-12, check recorder/microphone/cables, submit; expected kit status returned, one kit-12 returned event, six overdue becomes five, UI success agrees with teaching store."
+    },
+    {
+      "id": "RETURN-FAIL-01",
+      "required": true,
+      "method": "failure_fixture_and_store_assertion",
+      "outcome": "First failed save retains all three checks and actionable retry; fixture loans/events unchanged until retry records exactly one return."
+    },
+    {
+      "id": "DUPLICATE-01",
+      "required": true,
+      "method": "repeated_activation_and_store_assertion",
+      "outcome": "Repeated activation during 650ms pending lock records exactly one kit-12 return event."
+    },
+    {
+      "id": "NARROW-01",
+      "required": true,
+      "method": "geometry_and_image_inspection",
+      "outcome": "No whole-page overflow or clipped interactive controls at 320/390/768/1440 and 599/600/601/899/900/901px; identity/due/action usable; narrow UI and browser Back preserve query/scope/returns and restore selected row or Search focus; breakpoint changes restore a visible view and focus; long content plus 200% enlarged/spaced text at 320 and 390 included."
+    },
+    {
+      "id": "KEYBOARD-01",
+      "required": true,
+      "method": "keyboard_task_inspection",
+      "outcome": "Complete return with actual Tab, Space and Enter events without pointer, visible focus at every critical step and focus can leave task."
+    },
+    {
+      "id": "A11Y-AUTO-01",
+      "required": true,
+      "method": "state_specific_accessibility_scan_and_triage",
+      "outcome": "Scan queue/detail/pending/success/failure/empty/loading/long-content at 390/768/1440 plus no-matches and missing-accessory at 1440; capture loading-ready at 390/768/1440; every finding explicitly handled and unresolved findings fail. Load-error locking is independently exercised by actual-browser regression."
+    },
+    {
+      "id": "VISUAL-01",
+      "required": true,
+      "method": "independent_actual_image_review",
+      "outcome": "Fresh independent inspection covers exact current captured images and task evidence; no unresolved blocker/major, minor findings accepted explicitly with rationale."
+    }
+  ],
+  "policy": {
+    "not_applicable": {},
+    "minor_findings": "explicit_acceptance_with_rationale",
+    "accessibility_findings": "every_violation_requires_explicit_disposition; serious/critical unresolved fail",
+    "visual_rubric": [
+      "Hierarchy",
+      "Typography/readability",
+      "Composition/density",
+      "Component grammar",
+      "Content clarity",
+      "State coherence"
+    ]
+  },
+  "change_policy": "Version and explain legitimate changes; never remove requirements or rebaseline merely to pass.",
+  "limitations": [
+    "Authored teaching example; exclude from held-out/generalization claims",
+    "Local builder-writable runner is not a protected evaluator",
+    "Automated axe plus keyboard does not establish accessibility conformance or screen-reader usability",
+    "Standalone Chromium only; no all-host or in-app browser claim"
+  ],
+  "capture_inventory": [
+    {
+      "state": "queue-390",
+      "width": 390
+    },
+    {
+      "state": "detail-390",
+      "width": 390
+    },
+    {
+      "state": "pending-390",
+      "width": 390
+    },
+    {
+      "state": "success-390",
+      "width": 390
+    },
+    {
+      "state": "failure-390",
+      "width": 390
+    },
+    {
+      "state": "empty-390",
+      "width": 390
+    },
+    {
+      "state": "loading-390",
+      "width": 390
+    },
+    {
+      "state": "loading-ready-390",
+      "width": 390
+    },
+    {
+      "state": "long-content-390",
+      "width": 390
+    },
+    {
+      "state": "queue-768",
+      "width": 768
+    },
+    {
+      "state": "detail-768",
+      "width": 768
+    },
+    {
+      "state": "pending-768",
+      "width": 768
+    },
+    {
+      "state": "success-768",
+      "width": 768
+    },
+    {
+      "state": "failure-768",
+      "width": 768
+    },
+    {
+      "state": "empty-768",
+      "width": 768
+    },
+    {
+      "state": "loading-768",
+      "width": 768
+    },
+    {
+      "state": "loading-ready-768",
+      "width": 768
+    },
+    {
+      "state": "long-content-768",
+      "width": 768
+    },
+    {
+      "state": "queue-1440",
+      "width": 1440
+    },
+    {
+      "state": "detail-1440",
+      "width": 1440
+    },
+    {
+      "state": "pending-1440",
+      "width": 1440
+    },
+    {
+      "state": "success-1440",
+      "width": 1440
+    },
+    {
+      "state": "failure-1440",
+      "width": 1440
+    },
+    {
+      "state": "empty-1440",
+      "width": 1440
+    },
+    {
+      "state": "loading-1440",
+      "width": 1440
+    },
+    {
+      "state": "loading-ready-1440",
+      "width": 1440
+    },
+    {
+      "state": "long-content-1440",
+      "width": 1440
+    },
+    {
+      "state": "reflow-390-standard",
+      "width": 390
+    },
+    {
+      "state": "reflow-390-long-content",
+      "width": 390
+    },
+    {
+      "state": "reflow-768-standard",
+      "width": 768
+    },
+    {
+      "state": "reflow-768-long-content",
+      "width": 768
+    },
+    {
+      "state": "reflow-1440-standard",
+      "width": 1440
+    },
+    {
+      "state": "reflow-1440-long-content",
+      "width": 1440
+    },
+    {
+      "state": "reflow-320-standard",
+      "width": 320
+    },
+    {
+      "state": "reflow-320-long-content",
+      "width": 320
+    },
+    {
+      "state": "reflow-599-standard",
+      "width": 599
+    },
+    {
+      "state": "reflow-599-long-content",
+      "width": 599
+    },
+    {
+      "state": "reflow-600-standard",
+      "width": 600
+    },
+    {
+      "state": "reflow-600-long-content",
+      "width": 600
+    },
+    {
+      "state": "reflow-601-standard",
+      "width": 601
+    },
+    {
+      "state": "reflow-601-long-content",
+      "width": 601
+    },
+    {
+      "state": "reflow-899-standard",
+      "width": 899
+    },
+    {
+      "state": "reflow-899-long-content",
+      "width": 899
+    },
+    {
+      "state": "reflow-900-standard",
+      "width": 900
+    },
+    {
+      "state": "reflow-900-long-content",
+      "width": 900
+    },
+    {
+      "state": "reflow-901-standard",
+      "width": 901
+    },
+    {
+      "state": "reflow-901-long-content",
+      "width": 901
+    },
+    {
+      "state": "task-return-completed",
+      "width": 1440
+    },
+    {
+      "state": "keyboard-visible-focus",
+      "width": 390
+    },
+    {
+      "state": "text-enlargement-spacing-390",
+      "width": 390
+    },
+    {
+      "state": "no-matches-1440",
+      "width": 1440
+    },
+    {
+      "state": "missing-accessory-1440",
+      "width": 1440
+    },
+    {
+      "state": "text-enlargement-spacing-320",
+      "width": 320
+    },
+    {
+      "state": "text-enlargement-queue-320",
+      "width": 320
+    },
+    {
+      "state": "text-enlargement-queue-390",
+      "width": 390
+    }
+  ],
+  "capture_equivalence_groups": [
+    [
+      "reflow-390-standard",
+      "detail-390"
+    ],
+    [
+      "reflow-390-long-content",
+      "long-content-390"
+    ],
+    [
+      "reflow-768-standard",
+      "detail-768"
+    ],
+    [
+      "reflow-768-long-content",
+      "long-content-768"
+    ],
+    [
+      "queue-390",
+      "loading-ready-390"
+    ],
+    [
+      "queue-768",
+      "loading-ready-768"
+    ],
+    [
+      "queue-1440",
+      "loading-ready-1440"
+    ]
+  ],
+  "accessibility_scan_inventory": [
+    {
+      "state": "queue-390",
+      "width": 390
+    },
+    {
+      "state": "detail-390",
+      "width": 390
+    },
+    {
+      "state": "pending-390",
+      "width": 390
+    },
+    {
+      "state": "success-390",
+      "width": 390
+    },
+    {
+      "state": "failure-390",
+      "width": 390
+    },
+    {
+      "state": "empty-390",
+      "width": 390
+    },
+    {
+      "state": "loading-390",
+      "width": 390
+    },
+    {
+      "state": "long-content-390",
+      "width": 390
+    },
+    {
+      "state": "queue-768",
+      "width": 768
+    },
+    {
+      "state": "detail-768",
+      "width": 768
+    },
+    {
+      "state": "pending-768",
+      "width": 768
+    },
+    {
+      "state": "success-768",
+      "width": 768
+    },
+    {
+      "state": "failure-768",
+      "width": 768
+    },
+    {
+      "state": "empty-768",
+      "width": 768
+    },
+    {
+      "state": "loading-768",
+      "width": 768
+    },
+    {
+      "state": "long-content-768",
+      "width": 768
+    },
+    {
+      "state": "queue-1440",
+      "width": 1440
+    },
+    {
+      "state": "detail-1440",
+      "width": 1440
+    },
+    {
+      "state": "pending-1440",
+      "width": 1440
+    },
+    {
+      "state": "success-1440",
+      "width": 1440
+    },
+    {
+      "state": "failure-1440",
+      "width": 1440
+    },
+    {
+      "state": "empty-1440",
+      "width": 1440
+    },
+    {
+      "state": "loading-1440",
+      "width": 1440
+    },
+    {
+      "state": "long-content-1440",
+      "width": 1440
+    },
+    {
+      "state": "no-matches-1440",
+      "width": 1440
+    },
+    {
+      "state": "missing-accessory-1440",
+      "width": 1440
+    }
+  ]
+}

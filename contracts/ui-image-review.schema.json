@@ -1,0 +1,211 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "$id": "ui-image-review/v1",
+  "required": [
+    "schema",
+    "illustrative_only",
+    "source_hash",
+    "contract_hash",
+    "fixture_hash",
+    "run_id",
+    "reviewer",
+    "independent_context",
+    "reviewed_at",
+    "images",
+    "input_evidence_hashes",
+    "inspection_records",
+    "findings"
+  ],
+  "properties": {
+    "schema": {
+      "const": "ui-image-review/v1"
+    },
+    "illustrative_only": {
+      "const": false
+    },
+    "source_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "contract_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "fixture_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9_-]+$"
+    },
+    "reviewer": {
+      "type": "string",
+      "minLength": 1
+    },
+    "independent_context": {
+      "const": true
+    },
+    "reviewed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "images": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      }
+    },
+    "input_evidence_hashes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      }
+    },
+    "inspection_records": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "state",
+          "region",
+          "observation",
+          "consequence",
+          "severity",
+          "acceptance_condition",
+          "disposition"
+        ],
+        "properties": {
+          "state": {
+            "type": "string",
+            "minLength": 1
+          },
+          "region": {
+            "type": "string",
+            "minLength": 1
+          },
+          "observation": {
+            "type": "string",
+            "minLength": 1
+          },
+          "consequence": {
+            "type": "string",
+            "minLength": 1
+          },
+          "acceptance_condition": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rationale": {
+            "type": "string",
+            "minLength": 1
+          },
+          "resolution": {
+            "type": "string",
+            "minLength": 1
+          },
+          "severity": {
+            "enum": ["blocker", "major", "minor", "preference"]
+          },
+          "disposition": {
+            "enum": ["open", "resolved", "accepted"]
+          },
+          "resolution_evidence": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Current image paths covering the finding state/capture, or all current images for explicit global scope; runtime JSON cannot resolve a visual finding."
+          },
+          "scope": {
+            "enum": ["capture", "global"]
+          },
+          "capture": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "disposition": {
+                  "const": "resolved"
+                }
+              },
+              "required": ["disposition"]
+            },
+            "then": {
+              "required": ["resolution", "resolution_evidence"]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "disposition": {
+                  "const": "accepted"
+                }
+              },
+              "required": ["disposition"]
+            },
+            "then": {
+              "required": ["rationale"],
+              "properties": {
+                "severity": {
+                  "enum": ["minor", "preference"]
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "accessibility_triage": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["finding_id", "disposition", "rationale"],
+        "properties": {
+          "finding_id": {
+            "type": "string",
+            "pattern": "^axe-[a-f0-9]{64}$"
+          },
+          "disposition": {
+            "enum": ["open", "resolved", "accepted"]
+          },
+          "rationale": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "description": "Exactly one explicit triage record per incomplete accessibility node, required when such nodes exist. Open dispositions prevent acceptance."
+    }
+  }
+}

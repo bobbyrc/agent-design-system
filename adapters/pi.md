@@ -1,0 +1,5 @@
+# Pi adapter specification
+
+Status: unverified specification, no extension implemented. Use the same checkout entry, brief/decision, acceptance and runner contracts as [Codex](codex.md). Read the entry explicitly at `skills/ui-design/SKILL.md` in the complete checkout. The [harness reference](../skills/figma-ui/references/harnesses.md) documents Pi discovery through `.agents/skills`, `/skill:<name>`, `/reload` and startup diagnostics for self-contained installed skills. Do not copy or link this checkout-dependent entry alone into that path. Resolve actual tool availability and pin the host version.
+
+An optional future trusted extension may invoke the shared checker. Verify lifecycle, user interruption, extension trust and bounded retries before adoption. Avoid unconditional continuation loops; exhausted budgets and required BLOCKED stay incomplete. Do not implement a separate design policy or claim this file enforces completion. Implement and execute the [host smoke checklist](README.md) before claiming support.
